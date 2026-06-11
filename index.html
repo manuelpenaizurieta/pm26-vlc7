@@ -19,6 +19,10 @@ h1{font-size:24px;margin:0 0 4px;font-weight:700;color:#fff}
 .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
 .chip{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:9px;padding:8px 12px;font-size:15px;font-weight:600;cursor:pointer;min-width:46px;transition:all .12s}
 .chip.on{background:#d97706;border-color:#d97706;color:#fff}
+.sgrid{display:grid;grid-template-columns:auto repeat(6,1fr);gap:4px;margin-top:8px;max-width:380px;align-items:center}
+.sgrid .cell{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:7px;padding:9px 0;font-size:14px;font-weight:600;cursor:pointer;text-align:center;transition:all .1s}
+.sgrid .cell.on{background:#d97706;border-color:#d97706;color:#fff}
+.sgrid .axis{font-size:11px;color:var(--mut);text-align:center;font-weight:600}
 @media(prefers-color-scheme:dark){.risk{background:#633806;color:#FAC775}}
 .navwrap{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
 nav{display:flex;gap:8px;max-width:980px;margin:0 auto;padding:10px 16px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
@@ -57,7 +61,7 @@ select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:
  .pick{font-size:16px!important}.bar{max-width:none}}
 </style></head><body>
 <div class="hero"><header><h1>⚽ Polla Mundial 2026 <span class="tag">modelo v4</span></h1>
-<p class="sub">Generado 11 Jun 2026 21:06 · bracket oficial 2026 · calibrado a 48 cuotas reales (devig Shin, c=0.0028) · picks = política B (EV + bono unicidad)</p></header>
+<p class="sub">Generado 11 Jun 2026 21:14 · bracket oficial 2026 · calibrado a 48 cuotas reales (devig Shin, c=0.0028) · picks = política B (EV + bono unicidad)</p></header>
 <div class="stats">
 <div class="stat"><b>38</b><span>días para la final</span></div>
 <div class="stat"><b id="stJug">0/72</b><span>resultados metidos</span></div>
@@ -211,7 +215,6 @@ function renderHoy(){
  var prox=DATA.filter(function(m){return m.date===hoy||(m.date===man&&m.time<="08:00");});
  if(!prox.length){ prox=DATA.filter(function(m){return m.date>hoy;}).slice(0,4);
   list.innerHTML='<p class="note">No hay partidos en las próximas 26 h. Los siguientes:</p>'; }
- var COMMON=["1-0","2-0","2-1","3-0","3-1","1-1","0-0","2-2","0-1","0-2","1-2","3-2"];
  prox.forEach(function(m){
   var key=m.date+"|"+m.home+"|"+m.away;
   var gkey="grp|"+key;
@@ -226,21 +229,30 @@ function renderHoy(){
    +'<div style="margin:4px 0"><span class="pick" style="font-size:24px"></span> <span class="alt gnote"></span></div>'
    +'<div class="t">gana '+esc(m.home)+' '+m.ph+'% / empate '+m.pd+'% / gana '+esc(m.away)+' '+m.pa+'%</div>'
    +'<details style="margin-top:8px"'+(Object.keys(taken).length?' open':'')+'><summary class="t" style="cursor:pointer">👥 ¿qué marcadores ya tiene tu grupo? (toca los que veas en Estadísticas → Mi grupo)</summary>'
-   +'<div class="chips"></div></details>';
-  var pickEl=div.querySelector(".pick"), noteEl=div.querySelector(".gnote"), chips=div.querySelector(".chips");
+   +'<div class="t" style="margin-top:6px">filas = goles de '+esc(m.home)+' · columnas = goles de '+esc(m.away)+'</div>'
+   +'<div class="sgrid"></div></details>';
+  var pickEl=div.querySelector(".pick"), noteEl=div.querySelector(".gnote"), grid=div.querySelector(".sgrid");
   function refresh(){
    var rec=optimalWithGroup(m, Object.keys(taken).join(","));
    pickEl.textContent=rec.px+" - "+rec.py; noteEl.innerHTML=rec.note;
   }
-  COMMON.forEach(function(sc){
-   var b=document.createElement("button"); b.className="chip"+(taken[sc]?" on":""); b.textContent=sc;
-   b.addEventListener("click",function(){
-    if(taken[sc]){delete taken[sc];b.classList.remove("on");}else{taken[sc]=true;b.classList.add("on");}
-    store[gkey]=Object.keys(taken).join(","); if(!Object.keys(taken).length)delete store[gkey];
-    save(); refresh();
-   });
-   chips.appendChild(b);
-  });
+  // cabecera: esquina + goles visitante 0..5
+  var corner=document.createElement("div"); corner.className="axis"; corner.textContent="▢"; grid.appendChild(corner);
+  for(var a=0;a<6;a++){ var hc=document.createElement("div"); hc.className="axis"; hc.textContent=a; grid.appendChild(hc); }
+  for(var h=0;h<6;h++){
+   var rl=document.createElement("div"); rl.className="axis"; rl.textContent=h; grid.appendChild(rl);
+   for(var a2=0;a2<6;a2++){
+    (function(sc){
+     var c=document.createElement("button"); c.className="cell"+(taken[sc]?" on":""); c.textContent=sc;
+     c.addEventListener("click",function(){
+      if(taken[sc]){delete taken[sc];c.classList.remove("on");}else{taken[sc]=true;c.classList.add("on");}
+      store[gkey]=Object.keys(taken).join(","); if(!Object.keys(taken).length)delete store[gkey];
+      save(); refresh();
+     });
+     grid.appendChild(c);
+    })(h+"-"+a2);
+   }
+  }
   refresh();
   list.appendChild(div); });
  var misp=document.getElementById("misp"), lidp=document.getElementById("lidp");
