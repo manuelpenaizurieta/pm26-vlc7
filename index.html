@@ -48,7 +48,7 @@ select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:
  body{font-size:15px}.card{padding:10px 12px}h1{font-size:20px}.stat b{font-size:17px}nav button{padding:7px 10px;font-size:13px}}
 </style></head><body>
 <div class="hero"><header><h1>⚽ Polla Mundial 2026 <span class="tag">modelo v4</span></h1>
-<p class="sub">Generado 11 Jun 2026 11:37 · bracket oficial 2026 · calibrado a 48 cuotas reales (devig Shin, c=0.0028) · picks = política B (EV + bono unicidad)</p></header>
+<p class="sub">Generado 11 Jun 2026 12:20 · bracket oficial 2026 · calibrado a 48 cuotas reales (devig Shin, c=0.0028) · picks = política B (EV + bono unicidad)</p></header>
 <div class="stats">
 <div class="stat"><b>38</b><span>días para la final</span></div>
 <div class="stat"><b id="stJug">0/72</b><span>resultados metidos</span></div>
@@ -129,7 +129,7 @@ function render(){
     p=got+" pts"+((api&&!store[key])?" · auto":""); }
    row.innerHTML='<div class="t">'+m.time+'<br>['+m.g+']</div>'
     +'<div><span class="tm">'+esc(m.home)+' – '+esc(m.away)+'</span> '
-    +'<span class="pick">'+m.bx+'-'+m.by+'</span> <span class="alt">(seguro: '+m.ax+'-'+m.ay+' · EV '+m.eva.toFixed(2)+' vs '+m.evb.toFixed(2)+')</span>'
+    +'<span class="pick">'+m.bx+'-'+m.by+'</span> <span class="alt">(EV '+m.evb.toFixed(2)+' pts; el típico '+m.ax+'-'+m.ay+' daría '+m.eva.toFixed(2)+')</span>'
     +(isClose(m)?'<span class="risk">⚖ parejo</span>':'')
     +'<div class="bar"><i style="width:'+m.ph+'%;background:#1D9E75"></i><i style="width:'+m.pd+'%;background:#B4B2A9"></i><i style="width:'+m.pa+'%;background:#D85A30"></i></div>'
     +'<div class="t">'+m.ph+'% / '+m.pd+'% / '+m.pa+'%'+(m.mkt?' · 📈 prob. de mercado (23 casas)':'')+' · '+esc(m.venue)+'</div></div>'
@@ -174,7 +174,7 @@ function renderHoy(){
   div.innerHTML='<div class="t">'+(m.date===hoy?"HOY":m.dow)+'<br>'+m.time+'</div>'
    +'<div><span class="tm">'+esc(m.home)+' – '+esc(m.away)+'</span><br>'
    +'<span class="pick" style="font-size:22px">'+m.bx+' - '+m.by+'</span>'
-   +' <span class="alt">si prefieres seguro: '+m.ax+'-'+m.ay+'</span>'
+   +' <span class="alt">+'+(m.evb-m.eva).toFixed(1)+' pts esperados vs el pick típico ('+m.ax+'-'+m.ay+')</span>'
    +'<div class="t">gana '+esc(m.home)+' '+m.ph+'% / empate '+m.pd+'% / gana '+esc(m.away)+' '+m.pa+'%</div></div>';
   list.appendChild(div); });
  var misp=document.getElementById("misp"), lidp=document.getElementById("lidp");
