@@ -61,7 +61,7 @@ select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:
  .pick{font-size:16px!important}.bar{max-width:none}}
 </style></head><body>
 <div class="hero"><header><h1>⚽ Polla Mundial 2026 <span class="tag">modelo v4</span></h1>
-<p class="sub">Generado 11 Jun 2026 21:14 · bracket oficial 2026 · calibrado a 48 cuotas reales (devig Shin, c=0.0028) · picks = política B (EV + bono unicidad)</p></header>
+<p class="sub">Generado 11 Jun 2026 21:30 · bracket oficial 2026 · calibrado a 48 cuotas reales (devig Shin, c=0.0028) · picks = política B (EV + bono unicidad)</p></header>
 <div class="stats">
 <div class="stat"><b>38</b><span>días para la final</span></div>
 <div class="stat"><b id="stJug">0/72</b><span>resultados metidos</span></div>
@@ -300,9 +300,8 @@ function renderAvanza(){
 }
 render(); renderProbs(); renderHoy(); renderAvanza();
 // las apuestas cierran 20 min antes del saque (margen de seguridad)
-var CLOSE_MIN=20;
 function kickoff(m){ return new Date(m.date+"T"+(m.time.length===5?m.time:"0"+m.time)+":00+02:00"); }
-function closeTime(m){ return new Date(kickoff(m).getTime()-CLOSE_MIN*6e4); }
+function closeTime(m){ return new Date(kickoff(m).getTime()-20*60000); }
 function hm(ms){ var h=Math.floor(ms/3.6e6), mi=Math.floor((ms%3.6e6)/6e4), d=Math.floor(h/24);
  return (d>0?d+"d ":"")+(h%24)+"h "+mi+"m"; }
 // cuenta atras al CIERRE de apuestas del proximo partido aun abierto
