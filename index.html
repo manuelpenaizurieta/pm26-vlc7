@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Polla Mundial 2026 · v4</title>
+<style>
+:root{--bg:#eef1f6;--card:#fff;--ink:#13245c;--mut:#5d6b8a;--line:#e6eaf1;--acc:#2563eb;--ok:#0e9f6e;--warn:#d97706;--bad:#dc2626;}
+@media(prefers-color-scheme:dark){:root{--bg:#0e1422;--card:#16203a;--ink:#e8ecf6;--mut:#9aa7c4;--line:#243155;--acc:#60a5fa;--ok:#34d399;--warn:#fbbf24;--bad:#f87171;}}
+*{box-sizing:border-box}body{margin:0;font:16px/1.55 system-ui,Segoe UI,sans-serif;background:var(--bg);color:var(--ink)}
+.hero{background:linear-gradient(135deg,#0b1b44,#1d4ed8 70%,#2563eb);color:#fff;padding:22px 0 18px}
+header{padding:0 16px;max-width:980px;margin:0 auto}
+h1{font-size:24px;margin:0 0 4px;font-weight:700;color:#fff}
+.sub{color:#cfe0ff;font-size:13px;margin:0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;max-width:980px;margin:14px auto 0;padding:0 16px}
+.stat{background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.22);border-radius:10px;padding:8px 12px}
+.stat b{display:block;font-size:20px;color:#fff}
+.stat span{font-size:12px;color:#cfe0ff}
+.risk{display:inline-block;background:#FAEEDA;color:#854F0B;border-radius:6px;padding:0 7px;font-size:12px;font-weight:600;margin-left:6px;white-space:nowrap}
+@media(prefers-color-scheme:dark){.risk{background:#633806;color:#FAC775}}
+nav{display:flex;gap:8px;flex-wrap:wrap;max-width:980px;margin:12px auto 0;padding:0 16px}
+nav button{border:1px solid var(--line);background:var(--card);padding:8px 14px;border-radius:9px;font-size:14px;cursor:pointer}
+nav button.on{background:#2563eb;border-color:#2563eb;color:#fff;box-shadow:0 2px 8px rgba(37,99,235,.35)}
+main{max-width:980px;margin:14px auto 60px;padding:0 16px;display:none}
+main.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.day{font-weight:600;font-size:15px;margin:18px 4px 8px}
+.day.today{color:var(--acc)}
+.mx{display:grid;grid-template-columns:64px 1fr auto;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+.mx:first-of-type{border-top:0}
+.t{font-size:13px;color:var(--mut)}
+.tm{font-size:15px}
+.pick{font-weight:700;color:#1d4ed8;background:#dbeafe;border-radius:7px;padding:1px 8px;white-space:nowrap}
+@media(prefers-color-scheme:dark){.pick{color:#bfdbfe;background:#1e3a8a}}
+.alt{font-size:12px;color:var(--mut);white-space:nowrap}
+.bar{height:6px;border-radius:3px;display:flex;overflow:hidden;margin-top:4px;max-width:260px}
+.bar i{display:block;height:100%}
+.res{width:64px;border:1px solid var(--line);border-radius:7px;padding:4px 6px;font-size:14px;text-align:center}
+.ptsb{font-size:12px;color:var(--warn);min-width:52px;text-align:right}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--line)}
+th{cursor:pointer;color:var(--mut);font-weight:600;font-size:12px}
+td:first-child,th:first-child{text-align:left}
+.tag{display:inline-block;background:#EEEDFE;color:#3C3489;border-radius:6px;padding:1px 7px;font-size:12px;margin-left:6px}
+.note{font-size:13px;color:var(--mut)}
+.tot{font-size:15px;font-weight:600}
+select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:14px;background:var(--card)}
+@media(max-width:560px){.mx{grid-template-columns:52px 1fr;gap:8px}.mx>.right{grid-column:1/3;justify-self:end}
+ body{font-size:15px}.card{padding:10px 12px}h1{font-size:20px}.stat b{font-size:17px}nav button{padding:7px 10px;font-size:13px}}
+</style></head><body>
+<div class="hero"><header><h1>⚽ Polla Mundial 2026 <span class="tag">modelo v4</span></h1>
+<p class="sub">Generado 11 Jun 2026 11:09 · bracket oficial 2026 · calibrado a 48 cuotas reales (devig Shin, c=0.0028) · picks = política B (EV + bono unicidad)</p></header>
+<div class="stats">
+<div class="stat"><b>38</b><span>días para la final</span></div>
+<div class="stat"><b id="stJug">0/72</b><span>resultados metidos</span></div>
+<div class="stat"><b>98.1%</b><span>P(quedar 1º) simulada</span></div>
+<div class="stat"><b>Espana</b><span>favorito (P campeón 19.6%)</span></div>
+</div></div>
+<nav><button data-t="hoy" class="on">Hoy: qué hacer</button><button data-t="cal">Calendario y picks</button><button data-t="probs">Probabilidades</button><button data-t="strat">Estrategia</button><button data-t="rules">Reglas</button></nav>
+<main id="hoy" class="on">
+<div class="card"><b>1 · Mete estos picks en pollamundial.org</b> <span class="note">(próximas 26 h, hora de Valencia — el pick grande es el de la política B)</span><div id="todayList"></div></div>
+<div class="card"><b>2 · Tu posición en la polla</b><br>
+<label class="note">Tus puntos: <input class="res" id="misp" inputmode="numeric"></label>
+<label class="note" style="margin-left:10px">Puntos del líder: <input class="res" id="lidp" inputmode="numeric"></label>
+<div id="rec" class="note" style="margin-top:8px">Rellena los dos números después de cada jornada (los ves en la web de la polla) y te digo qué marcha usar.</div></div>
+<div class="card"><b>3 · Estado del sistema</b><ul style="margin:8px 0 4px;padding-left:20px;font-size:14px"><li>✅ Resultados automáticos conectados (football-data.org)</li><li>✅ Cuotas de 48 equipos conectadas (devig Shin activo)</li><li>⬜ Elo en vivo: se activará solo cuando entren los primeros resultados</li></ul>
+<p class="note">Cada mañana: doble clic en <b>actualizar_polla.bat</b> (o <code>python daily_update.py</code>) y vuelve a abrir este archivo.</p></div></main>
+<main id="cal">
+<div class="card"><span class="tot" id="score">0 pts</span> <span class="note" id="scoren">— introduce resultados (ej. 2-1) y calculo los puntos de tu pick valiente. El bono unicidad (+2) no es calculable aquí: súmalo cuando lo veas en la web.</span><br>
+<label class="note">Filtrar grupo: <select id="gf"><option value="">todos</option></select></label>
+<label class="note" style="margin-left:12px"><input type="checkbox" id="onlyClose"> solo partidos parejos ⚖</label></div>
+<div id="days"></div></main>
+<main id="probs"><div class="card"><p class="note">Click en una columna para ordenar. ± = incertidumbre por sensibilidad de ratings (bootstrap). R32 = pasa de grupos.</p>
+<div style="position:relative;height:300px;margin-bottom:14px"><canvas id="champChart"></canvas></div>
+<table id="pt"><thead><tr><th data-k="team">Equipo</th><th data-k="R32">R32</th><th data-k="R16">R16</th><th data-k="QF">QF</th><th data-k="SF">SF</th><th data-k="FINAL">Final</th><th data-k="CAMPEON">Campeón</th></tr></thead><tbody></tbody></table></div></main>
+<main id="strat"><div class="card">
+<p><b>La regla que lo cambia todo:</b> la predicción única (+2 por marcador que nadie más puso). Con ~10 jugadores, poner un marcador raro pero direccional (3-0 del favorito en vez de 1-0) pierde ~1 punto esperado de marcador y gana ~1,9 de bono casi seguro. En 72 partidos son ~+70 puntos sobre quien juega los marcadores típicos.</p>
+<p><b>Simulación</b> (1.500 pollas, 9 rivales sintéticos): EV-max puro gana el 7,7% de las veces; la política B (EV+unicidad) el 93,2%.</p>
+<p><b>Regla adaptativa</b> (puedes cambiar de marcha partido a partido):</p>
+<ul><li>Vas a &lt;8 pts del líder → política B (no regales EV).</li>
+<li>Vas a 8–20 pts → contrarian también en los partidos parejos (lado que nadie pisa).</li>
+<li>Vas a &gt;20 pts → flipea el GANADOR en los 3–4 partidos más parejos restantes (máxima varianza: el 70% es del 1º).</li></ul>
+<p><b>Bonos de avance</b>: predícelos con la pestaña Probabilidades (los 32 con mayor P(R32)). Valen hasta 320 pts en conjunto: más que cualquier marcador.</p>
+<p class="note">Riesgo conocido: si un rival usa el mismo truco de unicidad, ambos seguís cobrando el bono (marcadores distintos siguen siendo únicos); la ventaja se reduce pero no se vuelve en contra.</p></div></main>
+<main id="rules"><div class="card"><table><tbody>
+<tr><td>Marcador exacto</td><td>5</td></tr><tr><td>Ganador o empate acertado</td><td>2</td></tr>
+<tr><td>Gol acertado (por equipo)</td><td>1</td></tr><tr><td>Predicción única</td><td>2</td></tr>
+<tr><td>Bono dieciseisavos</td><td>10</td></tr><tr><td>Bono octavos</td><td>8</td></tr>
+<tr><td>Bono cuartos</td><td>4</td></tr><tr><td>Bono semifinales</td><td>2</td></tr>
+<tr><td>Bono final</td><td>5</td></tr><tr><td>Premios</td><td>70% / 20% / 10%</td></tr>
+</tbody></table><p class="note">Fuente: pollamundial.org (verificado 11 jun 2026).</p></div></main>
+<script>
+"use strict";
+var DATA=[{"g": "A", "home": "Mexico", "away": "Sudafrica", "date": "2026-06-11", "time": "21:00", "dow": "jueves", "dlabel": "11 jun", "venue": "Mexico City, Mexico", "ph": 67.3, "pd": 21.5, "pa": 11.2, "bx": 3, "by": 0, "evb": 4.33, "ax": 2, "ay": 0, "eva": 2.8, "mkt": true, "rx": null, "ry": null}, {"g": "A", "home": "CoreaSur", "away": "Chequia", "date": "2026-06-12", "time": "04:00", "dow": "viernes", "dlabel": "12 jun", "venue": "Zapopan, Mexico", "ph": 35.7, "pd": 31.0, "pa": 33.3, "bx": 0, "by": 0, "evb": 3.61, "ax": 1, "ay": 1, "eva": 2.07, "mkt": true, "rx": null, "ry": null}, {"g": "B", "home": "Canada", "away": "Bosnia", "date": "2026-06-12", "time": "21:00", "dow": "viernes", "dlabel": "12 jun", "venue": "Toronto, Canada", "ph": 52.5, "pd": 26.9, "pa": 20.6, "bx": 3, "by": 0, "evb": 3.72, "ax": 1, "ay": 0, "eva": 2.37, "mkt": true, "rx": null, "ry": null}, {"g": "D", "home": "EEUU", "away": "Paraguay", "date": "2026-06-13", "time": "03:00", "dow": "sábado", "dlabel": "13 jun", "venue": "Los Angeles, USA", "ph": 49.1, "pd": 28.1, "pa": 22.8, "bx": 3, "by": 0, "evb": 3.59, "ax": 1, "ay": 0, "eva": 2.31, "mkt": true, "rx": null, "ry": null}, {"g": "B", "home": "Catar", "away": "Suiza", "date": "2026-06-13", "time": "21:00", "dow": "sábado", "dlabel": "13 jun", "venue": "Santa Clara, USA", "ph": 7.1, "pd": 14.7, "pa": 78.2, "bx": 0, "by": 3, "evb": 4.66, "ax": 0, "ay": 2, "eva": 2.9, "mkt": true, "rx": null, "ry": null}, {"g": "C", "home": "Brasil", "away": "Marruecos", "date": "2026-06-14", "time": "00:00", "dow": "domingo", "dlabel": "14 jun", "venue": "New Jersey, USA", "ph": 57.9, "pd": 24.8, "pa": 17.2, "bx": 3, "by": 0, "evb": 3.92, "ax": 1, "ay": 0, "eva": 2.46, "mkt": true, "rx": null, "ry": null}, {"g": "C", "home": "Haiti", "away": "Escocia", "date": "2026-06-14", "time": "03:00", "dow": "domingo", "dlabel": "14 jun", "venue": "Foxborough, USA", "ph": 15.7, "pd": 22.3, "pa": 61.9, "bx": 0, "by": 3, "evb": 4.03, "ax": 0, "ay": 2, "eva": 2.44, "mkt": true, "rx": null, "ry": null}, {"g": "D", "home": "Australia", "away": "Turkiye", "date": "2026-06-14", "time": "06:00", "dow": "domingo", "dlabel": "14 jun", "venue": "Vancouver, Canada", "ph": 18.4, "pd": 25.2, "pa": 56.4, "bx": 0, "by": 3, "evb": 3.85, "ax": 0, "ay": 1, "eva": 2.41, "mkt": true, "rx": null, "ry": null}, {"g": "E", "home": "Alemania", "away": "Curazao", "date": "2026-06-14", "time": "19:00", "dow": "domingo", "dlabel": "14 jun", "venue": "Houston, USA", "ph": 92.6, "pd": 5.3, "pa": 2.1, "bx": 4, "by": 0, "evb": 4.87, "ax": 4, "ay": 0, "eva": 3.02, "mkt": true, "rx": null, "ry": null}, {"g": "F", "home": "PaisesBajos", "away": "Japon", "date": "2026-06-14", "time": "22:00", "dow": "domingo", "dlabel": "14 jun", "venue": "Arlington, USA", "ph": 47.3, "pd": 26.6, "pa": 26.1, "bx": 3, "by": 0, "evb": 3.48, "ax": 1, "ay": 0, "eva": 2.05, "mkt": true, "rx": null, "ry": null}, {"g": "E", "home": "CostaMarfil", "away": "Ecuador", "date": "2026-06-15", "time": "01:00", "dow": "lunes", "dlabel": "15 jun", "venue": "Philadelphia, USA", "ph": 26.7, "pd": 34.0, "pa": 39.3, "bx": 0, "by": 0, "evb": 4.05, "ax": 0, "ay": 1, "eva": 2.36, "mkt": true, "rx": null, "ry": null}, {"g": "F", "home": "Suecia", "away": "Tunez", "date": "2026-06-15", "time": "04:00", "dow": "lunes", "dlabel": "15 jun", "venue": "Guadalupe, Mexico", "ph": 50.2, "pd": 27.8, "pa": 22.0, "bx": 3, "by": 0, "evb": 3.63, "ax": 1, "ay": 0, "eva": 2.34, "mkt": true, "rx": null, "ry": null}, {"g": "H", "home": "Espana", "away": "CaboVerde", "date": "2026-06-15", "time": "18:00", "dow": "lunes", "dlabel": "15 jun", "venue": "Atlanta, USA", "ph": 87.6, "pd": 8.7, "pa": 3.7, "bx": 3, "by": 0, "evb": 4.84, "ax": 3, "ay": 0, "eva": 2.99, "mkt": true, "rx": null, "ry": null}, {"g": "G", "home": "Belgica", "away": "Egipto", "date": "2026-06-15", "time": "21:00", "dow": "lunes", "dlabel": "15 jun", "venue": "Seattle, USA", "ph": 58.0, "pd": 24.6, "pa": 17.4, "bx": 3, "by": 0, "evb": 3.91, "ax": 1, "ay": 0, "eva": 2.43, "mkt": true, "rx": null, "ry": null}, {"g": "H", "home": "ArabiaSaudi", "away": "Uruguay", "date": "2026-06-16", "time": "00:00", "dow": "martes", "dlabel": "16 jun", "venue": "Miami, USA", "ph": 12.2, "pd": 21.5, "pa": 66.3, "bx": 0, "by": 3, "evb": 4.26, "ax": 0, "ay": 2, "eva": 2.7, "mkt": true, "rx": null, "ry": null}, {"g": "G", "home": "Iran", "away": "NuevaZelanda", "date": "2026-06-16", "time": "03:00", "dow": "martes", "dlabel": "16 jun", "venue": "Los Angeles, USA", "ph": 52.0, "pd": 27.5, "pa": 20.5, "bx": 3, "by": 0, "evb": 3.71, "ax": 1, "ay": 0, "eva": 2.41, "mkt": true, "rx": null, "ry": null}, {"g": "I", "home": "Francia", "away": "Senegal", "date": "2026-06-16", "time": "21:00", "dow": "martes", "dlabel": "16 jun", "venue": "New Jersey, USA", "ph": 65.1, "pd": 21.8, "pa": 13.1, "bx": 3, "by": 0, "evb": 4.19, "ax": 2, "ay": 0, "eva": 2.63, "mkt": true, "rx": null, "ry": null}, {"g": "I", "home": "Iraq", "away": "Noruega", "date": "2026-06-17", "time": "00:00", "dow": "miércoles", "dlabel": "17 jun", "venue": "Foxborough, USA", "ph": 6.9, "pd": 13.7, "pa": 79.4, "bx": 0, "by": 3, "evb": 4.65, "ax": 0, "ay": 2, "eva": 2.84, "mkt": true, "rx": null, "ry": null}, {"g": "J", "home": "Argentina", "away": "Argelia", "date": "2026-06-17", "time": "03:00", "dow": "miércoles", "dlabel": "17 jun", "venue": "Kansas City, USA", "ph": 68.8, "pd": 20.5, "pa": 10.6, "bx": 3, "by": 0, "evb": 4.38, "ax": 2, "ay": 0, "eva": 2.81, "mkt": true, "rx": null, "ry": null}, {"g": "J", "home": "Austria", "away": "Jordania", "date": "2026-06-17", "time": "06:00", "dow": "miércoles", "dlabel": "17 jun", "venue": "Santa Clara, USA", "ph": 72.5, "pd": 17.4, "pa": 10.1, "bx": 3, "by": 0, "evb": 4.41, "ax": 2, "ay": 0, "eva": 2.7, "mkt": true, "rx": null, "ry": null}, {"g": "K", "home": "Portugal", "away": "RDCongo", "date": "2026-06-17", "time": "19:00", "dow": "miércoles", "dlabel": "17 jun", "venue": "Houston, USA", "ph": 74.7, "pd": 16.6, "pa": 8.7, "bx": 3, "by": 0, "evb": 4.53, "ax": 2, "ay": 0, "eva": 2.82, "mkt": true, "rx": null, "ry": null}, {"g": "L", "home": "Inglaterra", "away": "Croacia", "date": "2026-06-17", "time": "22:00", "dow": "miércoles", "dlabel": "17 jun", "venue": "Arlington, USA", "ph": 55.4, "pd": 25.2, "pa": 19.4, "bx": 3, "by": 0, "evb": 3.8, "ax": 1, "ay": 0, "eva": 2.34, "mkt": true, "rx": null, "ry": null}, {"g": "L", "home": "Ghana", "away": "Panama", "date": "2026-06-18", "time": "01:00", "dow": "jueves", "dlabel": "18 jun", "venue": "Toronto, Canada", "ph": 45.9, "pd": 27.8, "pa": 26.3, "bx": 3, "by": 0, "evb": 3.45, "ax": 1, "ay": 0, "eva": 2.11, "mkt": true, "rx": null, "ry": null}, {"g": "K", "home": "Uzbekistan", "away": "Colombia", "date": "2026-06-18", "time": "04:00", "dow": "jueves", "dlabel": "18 jun", "venue": "Mexico City, Mexico", "ph": 10.9, "pd": 20.3, "pa": 68.8, "bx": 0, "by": 3, "evb": 4.36, "ax": 0, "ay": 2, "eva": 2.78, "mkt": true, "rx": null, "ry": null}, {"g": "A", "home": "Chequia", "away": "Sudafrica", "date": "2026-06-18", "time": "18:00", "dow": "jueves", "dlabel": "18 jun", "venue": "Atlanta, USA", "ph": 48.4, "pd": 28.6, "pa": 23.0, "bx": 3, "by": 0, "evb": 3.57, "ax": 1, "ay": 0, "eva": 2.33, "mkt": true, "rx": null, "ry": null}, {"g": "B", "home": "Suiza", "away": "Bosnia", "date": "2026-06-18", "time": "21:00", "dow": "jueves", "dlabel": "18 jun", "venue": "Los Angeles, USA", "ph": 59.6, "pd": 23.6, "pa": 16.8, "bx": 3, "by": 0, "evb": 3.96, "ax": 2, "ay": 0, "eva": 2.4, "mkt": true, "rx": null, "ry": null}, {"g": "B", "home": "Canada", "away": "Catar", "date": "2026-06-19", "time": "00:00", "dow": "viernes", "dlabel": "19 jun", "venue": "Vancouver, Canada", "ph": 73.1, "pd": 18.3, "pa": 8.6, "bx": 3, "by": 0, "evb": 4.55, "ax": 2, "ay": 0, "eva": 2.93, "mkt": true, "rx": null, "ry": null}, {"g": "A", "home": "Mexico", "away": "CoreaSur", "date": "2026-06-19", "time": "03:00", "dow": "viernes", "dlabel": "19 jun", "venue": "Zapopan, Mexico", "ph": 52.7, "pd": 26.7, "pa": 20.5, "bx": 3, "by": 0, "evb": 3.72, "ax": 1, "ay": 0, "eva": 2.37, "mkt": true, "rx": null, "ry": null}, {"g": "D", "home": "EEUU", "away": "Australia", "date": "2026-06-19", "time": "21:00", "dow": "viernes", "dlabel": "19 jun", "venue": "Seattle, USA", "ph": 54.1, "pd": 24.9, "pa": 21.0, "bx": 3, "by": 0, "evb": 3.73, "ax": 1, "ay": 0, "eva": 2.21, "mkt": true, "rx": null, "ry": null}, {"g": "C", "home": "Escocia", "away": "Marruecos", "date": "2026-06-20", "time": "00:00", "dow": "sábado", "dlabel": "20 jun", "venue": "Foxborough, USA", "ph": 23.1, "pd": 28.7, "pa": 48.1, "bx": 0, "by": 3, "evb": 3.56, "ax": 0, "ay": 1, "eva": 2.33, "mkt": true, "rx": null, "ry": null}, {"g": "C", "home": "Brasil", "away": "Haiti", "date": "2026-06-20", "time": "02:30", "dow": "sábado", "dlabel": "20 jun", "venue": "Philadelphia, USA", "ph": 88.9, "pd": 7.9, "pa": 3.2, "bx": 3, "by": 0, "evb": 4.89, "ax": 3, "ay": 0, "eva": 3.04, "mkt": true, "rx": null, "ry": null}, {"g": "D", "home": "Turkiye", "away": "Paraguay", "date": "2026-06-20", "time": "05:00", "dow": "sábado", "dlabel": "20 jun", "venue": "Santa Clara, USA", "ph": 42.7, "pd": 30.0, "pa": 27.3, "bx": 0, "by": 0, "evb": 3.53, "ax": 1, "ay": 0, "eva": 2.18, "mkt": true, "rx": null, "ry": null}, {"g": "F", "home": "PaisesBajos", "away": "Suecia", "date": "2026-06-20", "time": "19:00", "dow": "sábado", "dlabel": "20 jun", "venue": "Houston, USA", "ph": 58.1, "pd": 23.7, "pa": 18.2, "bx": 3, "by": 0, "evb": 3.88, "ax": 2, "ay": 0, "eva": 2.31, "mkt": true, "rx": null, "ry": null}, {"g": "E", "home": "Alemania", "away": "CostaMarfil", "date": "2026-06-20", "time": "22:00", "dow": "sábado", "dlabel": "20 jun", "venue": "Toronto, Canada", "ph": 61.1, "pd": 22.0, "pa": 16.9, "bx": 3, "by": 0, "evb": 3.96, "ax": 2, "ay": 1, "eva": 2.36, "mkt": true, "rx": null, "ry": null}, {"g": "E", "home": "Ecuador", "away": "Curazao", "date": "2026-06-21", "time": "02:00", "dow": "domingo", "dlabel": "21 jun", "venue": "Kansas City, USA", "ph": 79.7, "pd": 14.0, "pa": 6.3, "bx": 3, "by": 0, "evb": 4.74, "ax": 2, "ay": 0, "eva": 2.96, "mkt": true, "rx": null, "ry": null}, {"g": "F", "home": "Tunez", "away": "Japon", "date": "2026-06-21", "time": "06:00", "dow": "domingo", "dlabel": "21 jun", "venue": "Guadalupe, Mexico", "ph": 18.1, "pd": 26.5, "pa": 55.4, "bx": 0, "by": 3, "evb": 3.84, "ax": 0, "ay": 1, "eva": 2.51, "mkt": true, "rx": null, "ry": null}, {"g": "H", "home": "Espana", "away": "ArabiaSaudi", "date": "2026-06-21", "time": "18:00", "dow": "domingo", "dlabel": "21 jun", "venue": "Atlanta, USA", "ph": 86.0, "pd": 10.0, "pa": 4.0, "bx": 3, "by": 0, "evb": 4.89, "ax": 3, "ay": 0, "eva": 3.04, "mkt": true, "rx": null, "ry": null}, {"g": "G", "home": "Belgica", "away": "Iran", "date": "2026-06-21", "time": "21:00", "dow": "domingo", "dlabel": "21 jun", "venue": "Los Angeles, USA", "ph": 67.7, "pd": 20.2, "pa": 12.1, "bx": 3, "by": 0, "evb": 4.27, "ax": 2, "ay": 0, "eva": 2.65, "mkt": true, "rx": null, "ry": null}, {"g": "H", "home": "Uruguay", "away": "CaboVerde", "date": "2026-06-22", "time": "00:00", "dow": "lunes", "dlabel": "22 jun", "venue": "Miami, USA", "ph": 65.8, "pd": 21.3, "pa": 13.0, "bx": 3, "by": 0, "evb": 4.21, "ax": 2, "ay": 0, "eva": 2.62, "mkt": true, "rx": null, "ry": null}, {"g": "G", "home": "NuevaZelanda", "away": "Egipto", "date": "2026-06-22", "time": "03:00", "dow": "lunes", "dlabel": "22 jun", "venue": "Vancouver, Canada", "ph": 19.6, "pd": 25.6, "pa": 54.8, "bx": 0, "by": 3, "evb": 3.78, "ax": 0, "ay": 1, "eva": 2.35, "mkt": true, "rx": null, "ry": null}, {"g": "J", "home": "Argentina", "away": "Austria", "date": "2026-06-22", "time": "19:00", "dow": "lunes", "dlabel": "22 jun", "venue": "Arlington, USA", "ph": 57.7, "pd": 25.0, "pa": 17.3, "bx": 3, "by": 0, "evb": 3.91, "ax": 1, "ay": 0, "eva": 2.46, "mkt": true, "rx": null, "ry": null}, {"g": "I", "home": "Francia", "away": "Iraq", "date": "2026-06-22", "time": "23:00", "dow": "lunes", "dlabel": "22 jun", "venue": "Philadelphia, USA", "ph": 84.9, "pd": 11.2, "pa": 4.0, "bx": 3, "by": 0, "evb": 5.0, "ax": 2, "ay": 0, "eva": 3.17, "mkt": true, "rx": null, "ry": null}, {"g": "I", "home": "Noruega", "away": "Senegal", "date": "2026-06-23", "time": "02:00", "dow": "martes", "dlabel": "23 jun", "venue": "Toronto, Canada", "ph": 44.7, "pd": 27.2, "pa": 28.2, "bx": 3, "by": 0, "evb": 3.38, "ax": 1, "ay": 0, "eva": 1.99, "mkt": true, "rx": null, "ry": null}, {"g": "J", "home": "Jordania", "away": "Argelia", "date": "2026-06-23", "time": "05:00", "dow": "martes", "dlabel": "23 jun", "venue": "Santa Clara, USA", "ph": 14.7, "pd": 22.6, "pa": 62.7, "bx": 0, "by": 3, "evb": 4.09, "ax": 0, "ay": 2, "eva": 2.53, "mkt": true, "rx": null, "ry": null}, {"g": "K", "home": "Portugal", "away": "Uzbekistan", "date": "2026-06-23", "time": "19:00", "dow": "martes", "dlabel": "23 jun", "venue": "Houston, USA", "ph": 76.2, "pd": 15.2, "pa": 8.6, "bx": 3, "by": 0, "evb": 4.5, "ax": 2, "ay": 0, "eva": 2.72, "mkt": true, "rx": null, "ry": null}, {"g": "L", "home": "Inglaterra", "away": "Ghana", "date": "2026-06-23", "time": "22:00", "dow": "martes", "dlabel": "23 jun", "venue": "Foxborough, USA", "ph": 72.1, "pd": 18.0, "pa": 9.9, "bx": 3, "by": 0, "evb": 4.44, "ax": 2, "ay": 0, "eva": 2.77, "mkt": true, "rx": null, "ry": null}, {"g": "L", "home": "Panama", "away": "Croacia", "date": "2026-06-24", "time": "01:00", "dow": "miércoles", "dlabel": "24 jun", "venue": "Foxborough, USA", "ph": 14.5, "pd": 23.7, "pa": 61.7, "bx": 0, "by": 3, "evb": 4.08, "ax": 0, "ay": 1, "eva": 2.6, "mkt": true, "rx": null, "ry": null}, {"g": "K", "home": "Colombia", "away": "RDCongo", "date": "2026-06-24", "time": "04:00", "dow": "miércoles", "dlabel": "24 jun", "venue": "Zapopan, Mexico", "ph": 64.9, "pd": 22.4, "pa": 12.7, "bx": 3, "by": 0, "evb": 4.21, "ax": 2, "ay": 0, "eva": 2.69, "mkt": true, "rx": null, "ry": null}, {"g": "B", "home": "Suiza", "away": "Canada", "date": "2026-06-24", "time": "21:00", "dow": "miércoles", "dlabel": "24 jun", "venue": "Vancouver, Canada", "ph": 44.7, "pd": 28.5, "pa": 26.8, "bx": 3, "by": 0, "evb": 3.41, "ax": 1, "ay": 0, "eva": 2.13, "mkt": true, "rx": null, "ry": null}, {"g": "B", "home": "Bosnia", "away": "Catar", "date": "2026-06-24", "time": "21:00", "dow": "miércoles", "dlabel": "24 jun", "venue": "Seattle, USA", "ph": 58.2, "pd": 25.1, "pa": 16.7, "bx": 3, "by": 0, "evb": 3.94, "ax": 1, "ay": 0, "eva": 2.52, "mkt": true, "rx": null, "ry": null}, {"g": "C", "home": "Marruecos", "away": "Haiti", "date": "2026-06-25", "time": "00:00", "dow": "jueves", "dlabel": "25 jun", "venue": "Atlanta, USA", "ph": 71.4, "pd": 18.7, "pa": 9.9, "bx": 3, "by": 0, "evb": 4.44, "ax": 2, "ay": 0, "eva": 2.81, "mkt": true, "rx": null, "ry": null}, {"g": "C", "home": "Escocia", "away": "Brasil", "date": "2026-06-25", "time": "00:00", "dow": "jueves", "dlabel": "25 jun", "venue": "Miami, USA", "ph": 14.5, "pd": 21.2, "pa": 64.4, "bx": 0, "by": 3, "evb": 4.11, "ax": 0, "ay": 2, "eva": 2.49, "mkt": true, "rx": null, "ry": null}, {"g": "A", "home": "Sudafrica", "away": "CoreaSur", "date": "2026-06-25", "time": "03:00", "dow": "jueves", "dlabel": "25 jun", "venue": "Guadalupe, Mexico", "ph": 23.6, "pd": 28.0, "pa": 48.3, "bx": 0, "by": 3, "evb": 3.56, "ax": 0, "ay": 1, "eva": 2.26, "mkt": true, "rx": null, "ry": null}, {"g": "A", "home": "Chequia", "away": "Mexico", "date": "2026-06-25", "time": "03:00", "dow": "jueves", "dlabel": "25 jun", "venue": "Mexico City, Mexico", "ph": 20.8, "pd": 26.9, "pa": 52.2, "bx": 0, "by": 3, "evb": 3.7, "ax": 0, "ay": 1, "eva": 2.36, "mkt": true, "rx": null, "ry": null}, {"g": "E", "home": "Curazao", "away": "CostaMarfil", "date": "2026-06-25", "time": "22:00", "dow": "jueves", "dlabel": "25 jun", "venue": "Philadelphia, USA", "ph": 7.2, "pd": 15.3, "pa": 77.6, "bx": 0, "by": 3, "evb": 4.66, "ax": 0, "ay": 2, "eva": 2.93, "mkt": true, "rx": null, "ry": null}, {"g": "E", "home": "Ecuador", "away": "Alemania", "date": "2026-06-25", "time": "22:00", "dow": "jueves", "dlabel": "25 jun", "venue": "New Jersey, USA", "ph": 20.0, "pd": 25.4, "pa": 54.6, "bx": 0, "by": 3, "evb": 3.77, "ax": 0, "ay": 1, "eva": 2.31, "mkt": true, "rx": null, "ry": null}, {"g": "F", "home": "Tunez", "away": "PaisesBajos", "date": "2026-06-26", "time": "01:00", "dow": "viernes", "dlabel": "26 jun", "venue": "Kansas City, USA", "ph": 14.9, "pd": 22.3, "pa": 62.8, "bx": 0, "by": 3, "evb": 4.08, "ax": 0, "ay": 2, "eva": 2.5, "mkt": true, "rx": null, "ry": null}, {"g": "F", "home": "Japon", "away": "Suecia", "date": "2026-06-26", "time": "01:00", "dow": "viernes", "dlabel": "26 jun", "venue": "Arlington, USA", "ph": 45.1, "pd": 28.0, "pa": 26.9, "bx": 3, "by": 0, "evb": 3.42, "ax": 1, "ay": 0, "eva": 2.09, "mkt": true, "rx": null, "ry": null}, {"g": "D", "home": "Turkiye", "away": "EEUU", "date": "2026-06-26", "time": "04:00", "dow": "viernes", "dlabel": "26 jun", "venue": "Los Angeles, USA", "ph": 35.7, "pd": 27.5, "pa": 36.8, "bx": 0, "by": 0, "evb": 3.17, "ax": 1, "ay": 1, "eva": 1.9, "mkt": true, "rx": null, "ry": null}, {"g": "D", "home": "Paraguay", "away": "Australia", "date": "2026-06-26", "time": "04:00", "dow": "viernes", "dlabel": "26 jun", "venue": "Santa Clara, USA", "ph": 43.5, "pd": 29.5, "pa": 27.1, "bx": 0, "by": 0, "evb": 3.48, "ax": 1, "ay": 0, "eva": 2.17, "mkt": true, "rx": null, "ry": null}, {"g": "I", "home": "Noruega", "away": "Francia", "date": "2026-06-26", "time": "21:00", "dow": "viernes", "dlabel": "26 jun", "venue": "Foxborough, USA", "ph": 22.1, "pd": 26.3, "pa": 51.6, "bx": 0, "by": 3, "evb": 3.66, "ax": 0, "ay": 1, "eva": 2.24, "mkt": true, "rx": null, "ry": null}, {"g": "I", "home": "Senegal", "away": "Iraq", "date": "2026-06-26", "time": "21:00", "dow": "viernes", "dlabel": "26 jun", "venue": "Toronto, Canada", "ph": 66.5, "pd": 21.1, "pa": 12.4, "bx": 3, "by": 0, "evb": 4.25, "ax": 2, "ay": 0, "eva": 2.67, "mkt": true, "rx": null, "ry": null}, {"g": "H", "home": "CaboVerde", "away": "ArabiaSaudi", "date": "2026-06-27", "time": "02:00", "dow": "sábado", "dlabel": "27 jun", "venue": "Houston, USA", "ph": 36.7, "pd": 29.0, "pa": 34.3, "bx": 0, "by": 0, "evb": 3.35, "ax": 1, "ay": 1, "eva": 1.99, "mkt": true, "rx": null, "ry": null}, {"g": "H", "home": "Uruguay", "away": "Espana", "date": "2026-06-27", "time": "02:00", "dow": "sábado", "dlabel": "27 jun", "venue": "Zapopan, Mexico", "ph": 17.8, "pd": 24.3, "pa": 57.9, "bx": 0, "by": 3, "evb": 3.9, "ax": 0, "ay": 1, "eva": 2.38, "mkt": true, "rx": null, "ry": null}, {"g": "G", "home": "NuevaZelanda", "away": "Belgica", "date": "2026-06-27", "time": "05:00", "dow": "sábado", "dlabel": "27 jun", "venue": "Vancouver, Canada", "ph": 9.3, "pd": 16.9, "pa": 73.8, "bx": 0, "by": 3, "evb": 4.47, "ax": 0, "ay": 2, "eva": 2.76, "mkt": true, "rx": null, "ry": null}, {"g": "G", "home": "Egipto", "away": "Iran", "date": "2026-06-27", "time": "05:00", "dow": "sábado", "dlabel": "27 jun", "venue": "Seattle, USA", "ph": 42.0, "pd": 31.3, "pa": 26.7, "bx": 0, "by": 0, "evb": 3.71, "ax": 1, "ay": 0, "eva": 2.27, "mkt": true, "rx": null, "ry": null}, {"g": "L", "home": "Panama", "away": "Inglaterra", "date": "2026-06-27", "time": "23:00", "dow": "sábado", "dlabel": "27 jun", "venue": "New Jersey, USA", "ph": 9.9, "pd": 16.4, "pa": 73.7, "bx": 0, "by": 3, "evb": 4.41, "ax": 0, "ay": 2, "eva": 2.65, "mkt": true, "rx": null, "ry": null}, {"g": "L", "home": "Croacia", "away": "Ghana", "date": "2026-06-27", "time": "23:00", "dow": "sábado", "dlabel": "27 jun", "venue": "Philadelphia, USA", "ph": 57.0, "pd": 25.1, "pa": 17.9, "bx": 3, "by": 0, "evb": 3.88, "ax": 1, "ay": 0, "eva": 2.43, "mkt": true, "rx": null, "ry": null}, {"g": "K", "home": "Colombia", "away": "Portugal", "date": "2026-06-28", "time": "01:30", "dow": "domingo", "dlabel": "28 jun", "venue": "Miami, USA", "ph": 26.8, "pd": 28.8, "pa": 44.4, "bx": 0, "by": 3, "evb": 3.41, "ax": 0, "ay": 1, "eva": 2.15, "mkt": true, "rx": null, "ry": null}, {"g": "K", "home": "RDCongo", "away": "Uzbekistan", "date": "2026-06-28", "time": "01:30", "dow": "domingo", "dlabel": "28 jun", "venue": "Atlanta, USA", "ph": 40.5, "pd": 29.1, "pa": 30.5, "bx": 0, "by": 0, "evb": 3.39, "ax": 1, "ay": 0, "eva": 2.0, "mkt": true, "rx": null, "ry": null}, {"g": "J", "home": "Argelia", "away": "Austria", "date": "2026-06-28", "time": "04:00", "dow": "domingo", "dlabel": "28 jun", "venue": "Kansas City, USA", "ph": 26.3, "pd": 30.1, "pa": 43.6, "bx": 0, "by": 0, "evb": 3.57, "ax": 0, "ay": 1, "eva": 2.23, "mkt": true, "rx": null, "ry": null}, {"g": "J", "home": "Jordania", "away": "Argentina", "date": "2026-06-28", "time": "04:00", "dow": "domingo", "dlabel": "28 jun", "venue": "Arlington, USA", "ph": 7.0, "pd": 13.8, "pa": 79.2, "bx": 0, "by": 3, "evb": 4.63, "ax": 0, "ay": 2, "eva": 2.82, "mkt": true, "rx": null, "ry": null}];
+var PROBS=[{"team": "Espana", "R32": 97.4, "R16": 74.7, "QF": 55.8, "SF": 42.7, "FINAL": 29.0, "CAMPEON": 19.6, "R32_sd": 1.2, "CAMPEON_sd": 5.2}, {"team": "Francia", "R32": 94.7, "R16": 74.0, "QF": 53.6, "SF": 38.3, "FINAL": 24.6, "CAMPEON": 15.7, "R32_sd": 1.5, "CAMPEON_sd": 3.3}, {"team": "Brasil", "R32": 96.0, "R16": 67.0, "QF": 46.3, "SF": 29.7, "FINAL": 17.7, "CAMPEON": 10.0, "R32_sd": 1.2, "CAMPEON_sd": 2.4}, {"team": "Inglaterra", "R32": 92.4, "R16": 64.0, "QF": 41.4, "SF": 25.1, "FINAL": 14.8, "CAMPEON": 7.8, "R32_sd": 2.2, "CAMPEON_sd": 2.7}, {"team": "Argentina", "R32": 92.7, "R16": 54.9, "QF": 37.3, "SF": 23.6, "FINAL": 13.3, "CAMPEON": 6.9, "R32_sd": 1.6, "CAMPEON_sd": 2.2}, {"team": "Portugal", "R32": 90.8, "R16": 60.6, "QF": 39.1, "SF": 23.6, "FINAL": 13.1, "CAMPEON": 6.5, "R32_sd": 1.9, "CAMPEON_sd": 2.1}, {"team": "PaisesBajos", "R32": 89.1, "R16": 52.6, "QF": 34.6, "SF": 18.6, "FINAL": 9.8, "CAMPEON": 4.7, "R32_sd": 3.1, "CAMPEON_sd": 2.2}, {"team": "Alemania", "R32": 92.4, "R16": 62.2, "QF": 32.3, "SF": 18.7, "FINAL": 9.4, "CAMPEON": 4.5, "R32_sd": 2.0, "CAMPEON_sd": 1.8}, {"team": "Belgica", "R32": 90.0, "R16": 59.0, "QF": 34.8, "SF": 16.4, "FINAL": 7.8, "CAMPEON": 3.5, "R32_sd": 2.2, "CAMPEON_sd": 1.5}, {"team": "Uruguay", "R32": 80.9, "R16": 43.2, "QF": 24.6, "SF": 12.8, "FINAL": 6.1, "CAMPEON": 2.4, "R32_sd": 3.5, "CAMPEON_sd": 1.0}, {"team": "Croacia", "R32": 82.6, "R16": 45.8, "QF": 23.2, "SF": 11.3, "FINAL": 5.3, "CAMPEON": 2.2, "R32_sd": 4.3, "CAMPEON_sd": 0.9}, {"team": "Colombia", "R32": 79.7, "R16": 43.1, "QF": 22.1, "SF": 10.9, "FINAL": 4.7, "CAMPEON": 1.8, "R32_sd": 4.4, "CAMPEON_sd": 0.9}, {"team": "Marruecos", "R32": 80.7, "R16": 40.1, "QF": 21.8, "SF": 10.0, "FINAL": 4.2, "CAMPEON": 1.6, "R32_sd": 4.0, "CAMPEON_sd": 0.6}, {"team": "EEUU", "R32": 80.4, "R16": 44.2, "QF": 21.4, "SF": 8.8, "FINAL": 3.4, "CAMPEON": 1.3, "R32_sd": 4.6, "CAMPEON_sd": 0.6}, {"team": "Mexico", "R32": 79.9, "R16": 44.7, "QF": 19.9, "SF": 8.1, "FINAL": 3.3, "CAMPEON": 1.1, "R32_sd": 3.3, "CAMPEON_sd": 0.4}, {"team": "Senegal", "R32": 67.3, "R16": 36.3, "QF": 16.3, "SF": 7.2, "FINAL": 3.1, "CAMPEON": 1.1, "R32_sd": 3.8, "CAMPEON_sd": 0.4}, {"team": "Suiza", "R32": 81.2, "R16": 44.6, "QF": 19.3, "SF": 7.6, "FINAL": 2.7, "CAMPEON": 0.9, "R32_sd": 3.0, "CAMPEON_sd": 0.4}, {"team": "Japon", "R32": 72.5, "R16": 33.1, "QF": 16.6, "SF": 7.0, "FINAL": 2.7, "CAMPEON": 0.9, "R32_sd": 4.1, "CAMPEON_sd": 0.6}, {"team": "Noruega", "R32": 68.5, "R16": 37.4, "QF": 17.3, "SF": 7.6, "FINAL": 3.1, "CAMPEON": 0.9, "R32_sd": 4.5, "CAMPEON_sd": 0.5}, {"team": "Turkiye", "R32": 73.6, "R16": 36.6, "QF": 15.7, "SF": 6.0, "FINAL": 2.1, "CAMPEON": 0.7, "R32_sd": 2.8, "CAMPEON_sd": 0.3}, {"team": "Canada", "R32": 74.3, "R16": 36.5, "QF": 14.4, "SF": 5.2, "FINAL": 1.7, "CAMPEON": 0.6, "R32_sd": 2.8, "CAMPEON_sd": 0.2}, {"team": "Ecuador", "R32": 72.6, "R16": 33.9, "QF": 12.6, "SF": 4.8, "FINAL": 1.6, "CAMPEON": 0.6, "R32_sd": 3.4, "CAMPEON_sd": 0.3}, {"team": "CoreaSur", "R32": 71.4, "R16": 34.6, "QF": 13.2, "SF": 4.6, "FINAL": 1.6, "CAMPEON": 0.5, "R32_sd": 4.0, "CAMPEON_sd": 0.3}, {"team": "Austria", "R32": 71.1, "R16": 26.2, "QF": 11.7, "SF": 4.5, "FINAL": 1.5, "CAMPEON": 0.5, "R32_sd": 5.8, "CAMPEON_sd": 0.4}, {"team": "CostaMarfil", "R32": 67.7, "R16": 29.5, "QF": 10.4, "SF": 3.7, "FINAL": 1.3, "CAMPEON": 0.4, "R32_sd": 4.7, "CAMPEON_sd": 0.2}, {"team": "Egipto", "R32": 69.1, "R16": 33.2, "QF": 13.0, "SF": 4.5, "FINAL": 1.3, "CAMPEON": 0.4, "R32_sd": 5.0, "CAMPEON_sd": 0.3}, {"team": "Iran", "R32": 68.1, "R16": 31.5, "QF": 11.8, "SF": 4.0, "FINAL": 1.3, "CAMPEON": 0.4, "R32_sd": 4.5, "CAMPEON_sd": 0.4}, {"team": "Chequia", "R32": 69.0, "R16": 32.5, "QF": 11.9, "SF": 3.7, "FINAL": 1.2, "CAMPEON": 0.3, "R32_sd": 4.5, "CAMPEON_sd": 0.2}, {"team": "Suecia", "R32": 59.0, "R16": 22.2, "QF": 9.3, "SF": 3.0, "FINAL": 1.0, "CAMPEON": 0.3, "R32_sd": 5.5, "CAMPEON_sd": 0.2}, {"team": "Bosnia", "R32": 63.3, "R16": 26.4, "QF": 8.5, "SF": 2.5, "FINAL": 0.7, "CAMPEON": 0.2, "R32_sd": 5.3, "CAMPEON_sd": 0.1}, {"team": "Escocia", "R32": 60.3, "R16": 21.5, "QF": 8.4, "SF": 2.5, "FINAL": 0.7, "CAMPEON": 0.2, "R32_sd": 4.5, "CAMPEON_sd": 0.2}, {"team": "Paraguay", "R32": 58.3, "R16": 23.2, "QF": 8.3, "SF": 2.7, "FINAL": 0.8, "CAMPEON": 0.2, "R32_sd": 4.9, "CAMPEON_sd": 0.2}, {"team": "Australia", "R32": 58.6, "R16": 23.6, "QF": 8.5, "SF": 2.6, "FINAL": 0.8, "CAMPEON": 0.2, "R32_sd": 4.7, "CAMPEON_sd": 0.1}, {"team": "Argelia", "R32": 65.7, "R16": 22.1, "QF": 9.1, "SF": 3.1, "FINAL": 0.9, "CAMPEON": 0.2, "R32_sd": 3.6, "CAMPEON_sd": 0.2}, {"team": "Sudafrica", "R32": 50.7, "R16": 18.6, "QF": 5.4, "SF": 1.4, "FINAL": 0.3, "CAMPEON": 0.1, "R32_sd": 4.5, "CAMPEON_sd": 0.1}, {"team": "Tunez", "R32": 47.5, "R16": 15.8, "QF": 5.5, "SF": 1.5, "FINAL": 0.4, "CAMPEON": 0.1, "R32_sd": 5.3, "CAMPEON_sd": 0.1}, {"team": "ArabiaSaudi", "R32": 43.1, "R16": 13.1, "QF": 4.4, "SF": 1.2, "FINAL": 0.3, "CAMPEON": 0.1, "R32_sd": 5.6, "CAMPEON_sd": 0.1}, {"team": "RDCongo", "R32": 50.7, "R16": 18.1, "QF": 6.1, "SF": 2.0, "FINAL": 0.6, "CAMPEON": 0.1, "R32_sd": 4.2, "CAMPEON_sd": 0.1}, {"team": "Uzbekistan", "R32": 43.2, "R16": 13.3, "QF": 4.1, "SF": 1.2, "FINAL": 0.4, "CAMPEON": 0.1, "R32_sd": 3.9, "CAMPEON_sd": 0.1}, {"team": "Ghana", "R32": 54.1, "R16": 19.7, "QF": 7.0, "SF": 2.3, "FINAL": 0.6, "CAMPEON": 0.1, "R32_sd": 5.2, "CAMPEON_sd": 0.2}, {"team": "Panama", "R32": 38.0, "R16": 10.7, "QF": 2.9, "SF": 0.8, "FINAL": 0.2, "CAMPEON": 0.1, "R32_sd": 4.9, "CAMPEON_sd": 0.1}, {"team": "Catar", "R32": 53.1, "R16": 19.4, "QF": 5.4, "SF": 1.3, "FINAL": 0.2, "CAMPEON": 0.0, "R32_sd": 5.5, "CAMPEON_sd": 0.1}, {"team": "Haiti", "R32": 27.1, "R16": 5.4, "QF": 1.4, "SF": 0.3, "FINAL": 0.0, "CAMPEON": 0.0, "R32_sd": 5.0, "CAMPEON_sd": 0.0}, {"team": "Curazao", "R32": 33.4, "R16": 8.5, "QF": 1.8, "SF": 0.4, "FINAL": 0.1, "CAMPEON": 0.0, "R32_sd": 4.8, "CAMPEON_sd": 0.0}, {"team": "NuevaZelanda", "R32": 40.0, "R16": 12.0, "QF": 2.9, "SF": 0.6, "FINAL": 0.1, "CAMPEON": 0.0, "R32_sd": 5.8, "CAMPEON_sd": 0.0}, {"team": "CaboVerde", "R32": 35.9, "R16": 10.0, "QF": 2.9, "SF": 0.7, "FINAL": 0.1, "CAMPEON": 0.0, "R32_sd": 6.0, "CAMPEON_sd": 0.0}, {"team": "Iraq", "R32": 33.1, "R16": 11.6, "QF": 3.3, "SF": 0.8, "FINAL": 0.2, "CAMPEON": 0.0, "R32_sd": 3.8, "CAMPEON_sd": 0.0}, {"team": "Jordania", "R32": 39.0, "R16": 8.9, "QF": 2.5, "SF": 0.5, "FINAL": 0.1, "CAMPEON": 0.0, "R32_sd": 5.2, "CAMPEON_sd": 0.0}];
+var store={};
+try{ store=JSON.parse(localStorage.getItem("polla_v4")||"{}"); }catch(e){ store={}; }
+function save(){ try{ localStorage.setItem("polla_v4",JSON.stringify(store)); }catch(e){} }
+function pts(px,py,ax,ay){var p=0;var s1=Math.sign(px-py),s2=Math.sign(ax-ay);
+ if(s1===s2)p+=2; if(px===ax)p+=1; if(py===ay)p+=1; if(px===ax&&py===ay)p+=5; return p;}
+function todayStr(){ try{ return new Date().toLocaleDateString("en-CA",{timeZone:"Europe/Madrid"}); }catch(e){ return new Date().toISOString().slice(0,10);} }
+var tabs=document.querySelectorAll("nav button");
+tabs.forEach(function(b){ b.addEventListener("click",function(){
+ tabs.forEach(function(x){x.classList.remove("on")}); b.classList.add("on");
+ document.querySelectorAll("main").forEach(function(m){m.classList.remove("on")});
+ document.getElementById(b.dataset.t).classList.add("on"); }); });
+var gf=document.getElementById("gf");
+"ABCDEFGHIJKL".split("").forEach(function(g){var o=document.createElement("option");o.value=g;o.textContent="Grupo "+g;gf.appendChild(o);});
+gf.addEventListener("change",render);
+var onlyClose=document.getElementById("onlyClose");
+onlyClose.addEventListener("change",render);
+function isClose(m){return Math.abs(m.ph-m.pa)<8;}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");}
+function render(){
+ var hoy=todayStr(); var cont=document.getElementById("days"); cont.innerHTML="";
+ var byDay={}; DATA.forEach(function(m){ if(gf.value&&m.g!==gf.value)return; if(onlyClose.checked&&!isClose(m))return; (byDay[m.date]=byDay[m.date]||[]).push(m); });
+ var total=0,nres=0;
+ Object.keys(byDay).sort().forEach(function(d){
+  var h=document.createElement("div"); h.className="day"+(d===hoy?" today":"");
+  var first=byDay[d][0]; h.textContent=first.dow+" "+first.dlabel+(d===hoy?"  ·  HOY":"");
+  cont.appendChild(h);
+  var card=document.createElement("div"); card.className="card";
+  byDay[d].forEach(function(m){
+   var key=m.date+"|"+m.home+"|"+m.away;
+   var row=document.createElement("div"); row.className="mx";
+   var api=(m.rx!=null&&m.ry!=null)?m.rx+"-"+m.ry:"";
+   var val=store[key]||api;
+   var p="";
+   if(val){ var r=val.split("-"); var got=pts(m.bx,m.by,+r[0],+r[1]); total+=got; nres++;
+    p=got+" pts"+((api&&!store[key])?" · auto":""); }
+   row.innerHTML='<div class="t">'+m.time+'<br>['+m.g+']</div>'
+    +'<div><span class="tm">'+esc(m.home)+' – '+esc(m.away)+'</span> '
+    +'<span class="pick">'+m.bx+'-'+m.by+'</span> <span class="alt">(seguro: '+m.ax+'-'+m.ay+' · EV '+m.eva.toFixed(2)+' vs '+m.evb.toFixed(2)+')</span>'
+    +(isClose(m)?'<span class="risk">⚖ parejo</span>':'')
+    +'<div class="bar"><i style="width:'+m.ph+'%;background:#1D9E75"></i><i style="width:'+m.pd+'%;background:#B4B2A9"></i><i style="width:'+m.pa+'%;background:#D85A30"></i></div>'
+    +'<div class="t">'+m.ph+'% / '+m.pd+'% / '+m.pa+'%'+(m.mkt?' · 📈 prob. de mercado (23 casas)':'')+' · '+esc(m.venue)+'</div></div>'
+    +'<div class="right"><input class="res" placeholder="res" value="'+val+'"> <span class="ptsb">'+p+'</span></div>';
+   var inp=row.querySelector("input");
+   inp.addEventListener("change",function(){
+    var v=inp.value.trim();
+    if(/^\d+-\d+$/.test(v)){ store[key]=v; } else { delete store[key]; inp.value=""; }
+    save(); render(); });
+   card.appendChild(row);
+  });
+  cont.appendChild(card);
+ });
+ document.getElementById("score").textContent=total+" pts";
+ if(nres)document.getElementById("scoren").textContent="("+nres+" resultados introducidos; sin contar bonos de unicidad ni de avance)";
+ var done=0; DATA.forEach(function(m){ if(store[m.date+"|"+m.home+"|"+m.away]||m.rx!=null)done++; });
+ document.getElementById("stJug").textContent=done+"/72";
+}
+var sortK="CAMPEON",sortAsc=false;
+function renderProbs(){
+ var tb=document.querySelector("#pt tbody"); tb.innerHTML="";
+ var rs=PROBS.slice().sort(function(a,b){
+  if(sortK==="team")return sortAsc?a.team.localeCompare(b.team):b.team.localeCompare(a.team);
+  return sortAsc?a[sortK]-b[sortK]:b[sortK]-a[sortK];});
+ rs.forEach(function(r){
+  var tr=document.createElement("tr");
+  tr.innerHTML="<td>"+esc(r.team)+"</td><td>"+r.R32+"%±"+r.R32_sd+"</td><td>"+r.R16+"%</td><td>"+r.QF
+   +"%</td><td>"+r.SF+"%</td><td>"+r.FINAL+"%</td><td>"+r.CAMPEON+"%±"+r.CAMPEON_sd+"</td>";
+  tb.appendChild(tr); });
+}
+document.querySelectorAll("#pt th").forEach(function(th){ th.addEventListener("click",function(){
+ if(sortK===th.dataset.k)sortAsc=!sortAsc; else {sortK=th.dataset.k;sortAsc=false;} renderProbs(); }); });
+function addDays(s,n){var d=new Date(s+"T12:00:00");d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);}
+function renderHoy(){
+ var hoy=todayStr(), man=addDays(hoy,1);
+ var list=document.getElementById("todayList"); list.innerHTML="";
+ var prox=DATA.filter(function(m){return m.date===hoy||(m.date===man&&m.time<="08:00");});
+ if(!prox.length){ prox=DATA.filter(function(m){return m.date>hoy;}).slice(0,4);
+  list.innerHTML='<p class="note">No hay partidos en las próximas 26 h. Los siguientes:</p>'; }
+ prox.forEach(function(m){
+  var div=document.createElement("div"); div.className="mx";
+  div.innerHTML='<div class="t">'+(m.date===hoy?"HOY":m.dow)+'<br>'+m.time+'</div>'
+   +'<div><span class="tm">'+esc(m.home)+' – '+esc(m.away)+'</span><br>'
+   +'<span class="pick" style="font-size:22px">'+m.bx+' - '+m.by+'</span>'
+   +' <span class="alt">si prefieres seguro: '+m.ax+'-'+m.ay+'</span>'
+   +'<div class="t">gana '+esc(m.home)+' '+m.ph+'% / empate '+m.pd+'% / gana '+esc(m.away)+' '+m.pa+'%</div></div>';
+  list.appendChild(div); });
+ var misp=document.getElementById("misp"), lidp=document.getElementById("lidp");
+ misp.value=store._misp||""; lidp.value=store._lidp||"";
+ function rec(){
+  store._misp=misp.value; store._lidp=lidp.value; save();
+  var mi=parseInt(misp.value,10), li=parseInt(lidp.value,10);
+  var out=document.getElementById("rec");
+  if(isNaN(mi)||isNaN(li)){ out.textContent="Rellena los dos números después de cada jornada (los ves en la web de la polla) y te digo qué marcha usar."; return; }
+  var d=li-mi;
+  if(d<=0){ out.innerHTML="<b style='color:var(--ok)'>Vas LÍDER (+"+(-d)+").</b> Sigue con los picks tal cual (política B). No arriesgues más de lo que ya arriesga el sistema."; }
+  else if(d<8){ out.innerHTML="<b>A "+d+" pts del líder.</b> Sigue con los picks tal cual (política B). Es ruido, no cambies nada."; }
+  else if(d<=20){ out.innerHTML="<b style='color:var(--warn)'>A "+d+" pts.</b> Marcha C: en los partidos PAREJOS que vienen, pon el marcador del lado que nadie pisa (te los marco abajo)."+flips(2); }
+  else { out.innerHTML="<b style='color:#A32D2D'>A "+d+" pts: hay que arriesgar.</b> Flipea el GANADOR en los partidos más parejos que quedan (el 70% es del 1º, el 2º-3º premio es consolación):"+flips(4); }
+ }
+ function flips(n){
+  var hoy2=todayStr();
+  var prox2=DATA.filter(function(m){var k=m.date+"|"+m.home+"|"+m.away;return m.date>=hoy2&&!store[k];})
+   .sort(function(a,b){return Math.abs(a.ph-a.pa)-Math.abs(b.ph-b.pa);}).slice(0,n);
+  return "<ul>"+prox2.map(function(m){
+   var fx=m.ph>=m.pa?0:2, fy=m.ph>=m.pa?2:0;
+   var dog=m.ph>=m.pa?m.away:m.home;
+   return "<li>"+esc(m.home)+" – "+esc(m.away)+" ("+m.dlabel+"): en vez de "+m.bx+"-"+m.by
+    +" pon <b>"+fx+"-"+fy+"</b> (gana "+esc(dog)+", el lado que nadie pisa)</li>";
+  }).join("")+"</ul>";
+ }
+ misp.addEventListener("input",rec); lidp.addEventListener("input",rec); rec();
+}
+render(); renderProbs(); renderHoy();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+"use strict";
+(function(){
+ if(!window.Chart) return;  // sin internet: la tabla sigue funcionando
+ var topTeams=PROBS.slice().sort(function(a,b){return b.CAMPEON-a.CAMPEON;}).slice(0,12);
+ var dark=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches;
+ var tc=dark?"#a3a29a":"#6b6a64";
+ new Chart(document.getElementById("champChart"),{type:"bar",
+  data:{labels:topTeams.map(function(r){return r.team;}),
+   datasets:[{label:"P(campeón) %",data:topTeams.map(function(r){return r.CAMPEON;}),
+    backgroundColor:dark?"#AFA9EC":"#534AB7",borderRadius:4}]},
+  options:{responsive:true,maintainAspectRatio:false,
+   plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){
+    var r=topTeams[c.dataIndex];return "P(campeón) "+r.CAMPEON+"% ± "+r.CAMPEON_sd;}}}},
+   scales:{y:{ticks:{color:tc,callback:function(v){return v+"%";}},grid:{color:dark?"rgba(255,255,255,.07)":"rgba(0,0,0,.06)"}},
+    x:{ticks:{color:tc,maxRotation:45,autoSkip:false},grid:{display:false}}}}});
+})();
+</script></body></html>
