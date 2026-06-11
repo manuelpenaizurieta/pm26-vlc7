@@ -54,7 +54,7 @@ select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:
  .pick{font-size:16px!important}.bar{max-width:none}}
 </style></head><body>
 <div class="hero"><header><h1>⚽ Polla Mundial 2026 <span class="tag">modelo v4</span></h1>
-<p class="sub">Generado 11 Jun 2026 20:45 · bracket oficial 2026 · calibrado a 48 cuotas reales (devig Shin, c=0.0028) · picks = política B (EV + bono unicidad)</p></header>
+<p class="sub">Generado 11 Jun 2026 20:48 · bracket oficial 2026 · calibrado a 48 cuotas reales (devig Shin, c=0.0028) · picks = política B (EV + bono unicidad)</p></header>
 <div class="stats">
 <div class="stat"><b>38</b><span>días para la final</span></div>
 <div class="stat"><b id="stJug">0/72</b><span>resultados metidos</span></div>
@@ -185,22 +185,21 @@ function parseGroup(txt){
  return taken;
 }
 function optimalWithGroup(m, gtxt){
- // pick optimo = max( EV_base[marcador] + 2 si tu grupo NO lo tiene )
  var taken=parseGroup(gtxt); var hasGroup=Object.keys(taken).length>0;
- if(!m.g6){ return {px:m.bx, py:m.by, note:"+"+(m.evb-m.eva).toFixed(1)+" pts vs el típico ("+m.ax+"-"+m.ay+")"}; }
+ // sin datos del grupo: pick del sistema (politica B, con unicidad estimada)
+ if(!hasGroup||!m.g6){
+  return {px:m.bx, py:m.by, note:"+"+(m.evb-m.eva).toFixed(1)+" pts vs el típico ("+m.ax+"-"+m.ay+")"};
+ }
+ // con datos del grupo: bono unico EXACTO -> el mejor marcador que el grupo NO tiene
  var best=null;
  for(var px=0;px<6;px++) for(var py=0;py<6;py++){
-  var uniq=!taken[px+"-"+py];
-  var total=m.g6[px][py]+(uniq?2:0);
-  if(!best||total>best.total) best={px:px,py:py,total:total,uniq:uniq};
+  var total=m.g6[px][py]+(!taken[px+"-"+py]?2:0);
+  if(!best||total>best.total) best={px:px,py:py,total:total};
  }
- var note;
- if(!hasGroup){ note="+"+(m.evb-m.eva).toFixed(1)+" pts vs el típico ("+m.ax+"-"+m.ay+")"; }
- else {
-  var def=m.g6[m.bx][m.by]+ (!taken[m.bx+"-"+m.by]?2:0);
-  if(best.px===m.bx&&best.py===m.by){ note="✓ sigue siendo el mejor con tu grupo (único)"; }
-  else { note="⚡ ajustado a tu grupo: el "+m.bx+"-"+m.by+" ya lo tiene alguien · este es único (+"+(best.total-def).toFixed(1)+" pts)"; }
- }
+ var def=m.g6[m.bx][m.by]+(!taken[m.bx+"-"+m.by]?2:0);
+ var note=(best.px===m.bx&&best.py===m.by)
+  ? "✓ sigue siendo el mejor con tu grupo (único)"
+  : "⚡ ajustado a tu grupo: el "+m.bx+"-"+m.by+" ya lo tiene alguien · este es único (+"+(best.total-def).toFixed(1)+" pts)";
  return {px:best.px, py:best.py, note:note};
 }
 function renderHoy(){
