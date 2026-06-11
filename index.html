@@ -57,7 +57,7 @@ select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:
  .pick{font-size:16px!important}.bar{max-width:none}}
 </style></head><body>
 <div class="hero"><header><h1>⚽ Polla Mundial 2026 <span class="tag">modelo v4</span></h1>
-<p class="sub">Generado 11 Jun 2026 20:56 · bracket oficial 2026 · calibrado a 48 cuotas reales (devig Shin, c=0.0028) · picks = política B (EV + bono unicidad)</p></header>
+<p class="sub">Generado 11 Jun 2026 21:06 · bracket oficial 2026 · calibrado a 48 cuotas reales (devig Shin, c=0.0028) · picks = política B (EV + bono unicidad)</p></header>
 <div class="stats">
 <div class="stat"><b>38</b><span>días para la final</span></div>
 <div class="stat"><b id="stJug">0/72</b><span>resultados metidos</span></div>
@@ -66,7 +66,7 @@ select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:
 </div></div>
 <div class="navwrap"><nav><button data-t="hoy" class="on">Hoy: qué hacer</button><button data-t="cal">Calendario y picks</button><button data-t="avanza">Quién avanza</button><button data-t="probs">Probabilidades</button><button data-t="strat">Estrategia</button><button data-t="rules">Reglas</button></nav></div>
 <main id="hoy" class="on">
-<div class="card" style="border-left:3px solid var(--acc);border-radius:0 14px 14px 0"><b>⏱ Próximo partido</b> <span id="countdown" style="font-weight:600;color:var(--acc)">—</span><div id="nextMatch" class="note" style="margin-top:2px"></div></div>
+<div class="card" style="border-left:3px solid var(--acc);border-radius:0 14px 14px 0"><b>🔒 Cierra apuestas en</b> <span id="countdown" style="font-weight:700;color:var(--acc)">—</span><div id="nextMatch" class="note" style="margin-top:2px"></div></div>
 <div class="card"><b>1 · Mete estos picks en pollamundial.org</b> <span class="note">(próximas 26 h, hora de Valencia — el pick grande es el de la política B)</span><div id="todayList"></div></div>
 <div class="card"><b>2 · Tu posición en la polla</b><br>
 <label class="note">Tus puntos: <input class="res" id="misp" inputmode="numeric"></label>
@@ -216,10 +216,13 @@ function renderHoy(){
   var key=m.date+"|"+m.home+"|"+m.away;
   var gkey="grp|"+key;
   var taken={}; parseGroupList(store[gkey]||"").forEach(function(s){taken[s]=true;});
+  var closed=closeTime(m)<new Date();
+  var closeLbl=closeTime(m).toLocaleTimeString("es-ES",{timeZone:"Europe/Madrid",hour:"2-digit",minute:"2-digit"});
   var div=document.createElement("div"); div.style.padding="12px 0"; div.style.borderTop="1px solid var(--line)";
+  if(closed)div.style.opacity="0.5";
   div.innerHTML='<div style="display:flex;justify-content:space-between;align-items:baseline">'
    +'<span class="tm">'+esc(m.home)+' – '+esc(m.away)+'</span>'
-   +'<span class="t">'+(m.date===hoy?"HOY ":"")+m.time+'</span></div>'
+   +'<span class="t">'+(closed?'<b style="color:#dc2626">CERRADO</b>':'🔒 cierra '+closeLbl)+' · saque '+m.time+'</span></div>'
    +'<div style="margin:4px 0"><span class="pick" style="font-size:24px"></span> <span class="alt gnote"></span></div>'
    +'<div class="t">gana '+esc(m.home)+' '+m.ph+'% / empate '+m.pd+'% / gana '+esc(m.away)+' '+m.pa+'%</div>'
    +'<details style="margin-top:8px"'+(Object.keys(taken).length?' open':'')+'><summary class="t" style="cursor:pointer">👥 ¿qué marcadores ya tiene tu grupo? (toca los que veas en Estadísticas → Mi grupo)</summary>'
@@ -284,22 +287,26 @@ function renderAvanza(){
  document.getElementById("bubblelist").innerHTML=bh||'<span class="note">Esta vez no hay diferenciadores claros: la burbuja coincide con lo que pondrá todo el mundo.</span>';
 }
 render(); renderProbs(); renderHoy(); renderAvanza();
-// cuenta atras en vivo al proximo partido (hora de Valencia)
+// las apuestas cierran 20 min antes del saque (margen de seguridad)
+var CLOSE_MIN=20;
+function kickoff(m){ return new Date(m.date+"T"+(m.time.length===5?m.time:"0"+m.time)+":00+02:00"); }
+function closeTime(m){ return new Date(kickoff(m).getTime()-CLOSE_MIN*6e4); }
+function hm(ms){ var h=Math.floor(ms/3.6e6), mi=Math.floor((ms%3.6e6)/6e4), d=Math.floor(h/24);
+ return (d>0?d+"d ":"")+(h%24)+"h "+mi+"m"; }
+// cuenta atras al CIERRE de apuestas del proximo partido aun abierto
 function tickCountdown(){
- var now=new Date();
- var next=null;
- for(var i=0;i<DATA.length;i++){
-  var m=DATA[i]; var dt=new Date(m.date+"T"+(m.time.length===5?m.time:"0"+m.time)+":00+02:00");
-  if(dt>now){ next={m:m,dt:dt}; break; }
- }
+ var now=new Date(), next=null;
+ for(var i=0;i<DATA.length;i++){ if(closeTime(DATA[i])>now){ next=DATA[i]; break; } }
  var cd=document.getElementById("countdown"), nm=document.getElementById("nextMatch");
- if(!next){ cd.textContent="—"; nm.textContent="Mundial finalizado"; return; }
- var diff=Math.max(0,next.dt-now); var h=Math.floor(diff/3.6e6), mi=Math.floor((diff%3.6e6)/6e4);
- var d=Math.floor(h/24);
- cd.textContent=(d>0?d+"d ":"")+(h%24)+"h "+mi+"m";
- nm.innerHTML=esc(next.m.home)+" – "+esc(next.m.away)+" · tu pick <b style='color:var(--ok)'>"+next.m.bx+"-"+next.m.by+"</b> · "+next.m.dow+" "+next.m.time;
+ if(!next){ cd.textContent="—"; nm.textContent="No quedan partidos por apostar"; return; }
+ var diff=Math.max(0,closeTime(next)-now);
+ var urgent=diff<3.6e6;  // menos de 1h
+ cd.textContent=hm(diff); cd.style.color=urgent?"#dc2626":"var(--acc)";
+ nm.innerHTML="<b>"+esc(next.home)+" – "+esc(next.away)+"</b> · cierra a las "
+  +closeTime(next).toLocaleTimeString("es-ES",{timeZone:"Europe/Madrid",hour:"2-digit",minute:"2-digit"})
+  +" (saque "+next.time+")"+(urgent?" · <b style='color:#dc2626'>¡corre!</b>":"");
 }
-tickCountdown(); setInterval(tickCountdown,30000);
+tickCountdown(); setInterval(tickCountdown,20000);
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
