@@ -16,6 +16,9 @@ h1{font-size:24px;margin:0 0 4px;font-weight:700;color:#fff}
 .stat b{display:block;font-size:20px;color:#fff}
 .stat span{font-size:12px;color:#cfe0ff}
 .risk{display:inline-block;background:#FAEEDA;color:#854F0B;border-radius:6px;padding:0 7px;font-size:12px;font-weight:600;margin-left:6px;white-space:nowrap}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+.chip{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:9px;padding:8px 12px;font-size:15px;font-weight:600;cursor:pointer;min-width:46px;transition:all .12s}
+.chip.on{background:#d97706;border-color:#d97706;color:#fff}
 @media(prefers-color-scheme:dark){.risk{background:#633806;color:#FAC775}}
 .navwrap{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
 nav{display:flex;gap:8px;max-width:980px;margin:0 auto;padding:10px 16px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
@@ -54,7 +57,7 @@ select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:
  .pick{font-size:16px!important}.bar{max-width:none}}
 </style></head><body>
 <div class="hero"><header><h1>⚽ Polla Mundial 2026 <span class="tag">modelo v4</span></h1>
-<p class="sub">Generado 11 Jun 2026 20:48 · bracket oficial 2026 · calibrado a 48 cuotas reales (devig Shin, c=0.0028) · picks = política B (EV + bono unicidad)</p></header>
+<p class="sub">Generado 11 Jun 2026 20:56 · bracket oficial 2026 · calibrado a 48 cuotas reales (devig Shin, c=0.0028) · picks = política B (EV + bono unicidad)</p></header>
 <div class="stats">
 <div class="stat"><b>38</b><span>días para la final</span></div>
 <div class="stat"><b id="stJug">0/72</b><span>resultados metidos</span></div>
@@ -178,12 +181,12 @@ document.querySelectorAll("#pt th").forEach(function(th){ th.addEventListener("c
  if(sortK===th.dataset.k)sortAsc=!sortAsc; else {sortK=th.dataset.k;sortAsc=false;} renderProbs(); }); });
 function addDays(s,n){var d=new Date(s+"T12:00:00");d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);}
 function parseGroup(txt){
- // extrae los marcadores que tu grupo YA puso (cualquiera con % > 0 = no es unico)
  var taken={}; if(!txt) return taken;
  var re=/(\d+)\s*-\s*(\d+)/g, mm;
  while((mm=re.exec(txt))!==null){ taken[mm[1]+"-"+mm[2]]=true; }
  return taken;
 }
+function parseGroupList(txt){ return Object.keys(parseGroup(txt)); }
 function optimalWithGroup(m, gtxt){
  var taken=parseGroup(gtxt); var hasGroup=Object.keys(taken).length>0;
  // sin datos del grupo: pick del sistema (politica B, con unicidad estimada)
@@ -196,10 +199,10 @@ function optimalWithGroup(m, gtxt){
   var total=m.g6[px][py]+(!taken[px+"-"+py]?2:0);
   if(!best||total>best.total) best={px:px,py:py,total:total};
  }
- var def=m.g6[m.bx][m.by]+(!taken[m.bx+"-"+m.by]?2:0);
- var note=(best.px===m.bx&&best.py===m.by)
-  ? "✓ sigue siendo el mejor con tu grupo (único)"
-  : "⚡ ajustado a tu grupo: el "+m.bx+"-"+m.by+" ya lo tiene alguien · este es único (+"+(best.total-def).toFixed(1)+" pts)";
+ var ta; var nT=Object.keys(taken).length;
+ var note=taken[best.px+"-"+best.py]
+  ? "tu grupo ya lo tiene; aun así es el de más puntos"
+  : "✓ único en tu grupo · "+nT+" marcador"+(nT>1?"es":"")+" suyos descartados";
  return {px:best.px, py:best.py, note:note};
 }
 function renderHoy(){
@@ -208,26 +211,34 @@ function renderHoy(){
  var prox=DATA.filter(function(m){return m.date===hoy||(m.date===man&&m.time<="08:00");});
  if(!prox.length){ prox=DATA.filter(function(m){return m.date>hoy;}).slice(0,4);
   list.innerHTML='<p class="note">No hay partidos en las próximas 26 h. Los siguientes:</p>'; }
+ var COMMON=["1-0","2-0","2-1","3-0","3-1","1-1","0-0","2-2","0-1","0-2","1-2","3-2"];
  prox.forEach(function(m){
   var key=m.date+"|"+m.home+"|"+m.away;
   var gkey="grp|"+key;
+  var taken={}; parseGroupList(store[gkey]||"").forEach(function(s){taken[s]=true;});
   var div=document.createElement("div"); div.style.padding="12px 0"; div.style.borderTop="1px solid var(--line)";
-  var rec=optimalWithGroup(m, store[gkey]||"");
   div.innerHTML='<div style="display:flex;justify-content:space-between;align-items:baseline">'
    +'<span class="tm">'+esc(m.home)+' – '+esc(m.away)+'</span>'
    +'<span class="t">'+(m.date===hoy?"HOY ":"")+m.time+'</span></div>'
-   +'<div style="margin:4px 0"><span class="pick" style="font-size:24px">'+rec.px+' - '+rec.py+'</span> '
-   +'<span class="alt">'+rec.note+'</span></div>'
+   +'<div style="margin:4px 0"><span class="pick" style="font-size:24px"></span> <span class="alt gnote"></span></div>'
    +'<div class="t">gana '+esc(m.home)+' '+m.ph+'% / empate '+m.pd+'% / gana '+esc(m.away)+' '+m.pa+'%</div>'
-   +'<details style="margin-top:6px"><summary class="t" style="cursor:pointer">📋 pega lo que puso tu grupo (Estadísticas → Mi grupo) para afinar</summary>'
-   +'<textarea data-gk="'+gkey+'" placeholder="ej: 2-0 40%, 1-0 20%, 2-1 20%, 3-0 20%" '
-   +'style="width:100%;margin-top:6px;min-height:48px;border:1px solid var(--line);border-radius:8px;padding:6px;font:inherit;font-size:13px">'+esc(store[gkey]||"")+'</textarea></details>';
-  var ta=div.querySelector("textarea");
-  ta.addEventListener("input",function(){
-   var v=ta.value.trim();
-   if(v){store[gkey]=v;}else{delete store[gkey];}
-   save(); renderHoy();
+   +'<details style="margin-top:8px"'+(Object.keys(taken).length?' open':'')+'><summary class="t" style="cursor:pointer">👥 ¿qué marcadores ya tiene tu grupo? (toca los que veas en Estadísticas → Mi grupo)</summary>'
+   +'<div class="chips"></div></details>';
+  var pickEl=div.querySelector(".pick"), noteEl=div.querySelector(".gnote"), chips=div.querySelector(".chips");
+  function refresh(){
+   var rec=optimalWithGroup(m, Object.keys(taken).join(","));
+   pickEl.textContent=rec.px+" - "+rec.py; noteEl.innerHTML=rec.note;
+  }
+  COMMON.forEach(function(sc){
+   var b=document.createElement("button"); b.className="chip"+(taken[sc]?" on":""); b.textContent=sc;
+   b.addEventListener("click",function(){
+    if(taken[sc]){delete taken[sc];b.classList.remove("on");}else{taken[sc]=true;b.classList.add("on");}
+    store[gkey]=Object.keys(taken).join(","); if(!Object.keys(taken).length)delete store[gkey];
+    save(); refresh();
+   });
+   chips.appendChild(b);
   });
+  refresh();
   list.appendChild(div); });
  var misp=document.getElementById("misp"), lidp=document.getElementById("lidp");
  misp.value=store._misp||""; lidp.value=store._lidp||"";
