@@ -48,7 +48,7 @@ select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:
  body{font-size:15px}.card{padding:10px 12px}h1{font-size:20px}.stat b{font-size:17px}nav button{padding:7px 10px;font-size:13px}}
 </style></head><body>
 <div class="hero"><header><h1>⚽ Polla Mundial 2026 <span class="tag">modelo v4</span></h1>
-<p class="sub">Generado 11 Jun 2026 16:02 · bracket oficial 2026 · calibrado a 48 cuotas reales (devig Shin, c=0.0028) · picks = política B (EV + bono unicidad)</p></header>
+<p class="sub">Generado 11 Jun 2026 16:12 · bracket oficial 2026 · calibrado a 48 cuotas reales (devig Shin, c=0.0028) · picks = política B (EV + bono unicidad)</p></header>
 <div class="stats">
 <div class="stat"><b>38</b><span>días para la final</span></div>
 <div class="stat"><b id="stJug">0/72</b><span>resultados metidos</span></div>
@@ -71,9 +71,9 @@ select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:
 <div id="days"></div></main>
 <main id="avanza">
 <div class="card"><b>Aquí se gana la polla.</b> <span class="note">Acertar los 32 que pasan vale hasta 320 pts — más que todos los marcadores juntos. El bono es por equipo (R32 10 · octavos 8 · cuartos 4 · semis 2 · final 5). Predice por <b>probabilidad real</b> de pasar, no por fama.</span></div>
-<div class="card"><b>Tus 32 para dieciseisavos</b> <span class="note">(ordenados por probabilidad de pasar)</span><div id="r32list" style="margin-top:8px"></div></div>
-<div class="card"><b>⚖ Zona burbuja — donde se decide</b> <span class="note">Equipos cerca del corte. Los <b>diferenciadores</b> (verde) pasan con buena probabilidad pero casi nadie los pondrá: acertar uno son +10 puntos que te separan del grupo. Ponlos si vas por detrás o quieres arriesgar.</span><div id="bubblelist" style="margin-top:8px"></div></div></main>
-<main id="probs"><div class="card"><p class="note">Click en una columna para ordenar. ± = incertidumbre por sensibilidad de ratings (bootstrap). R32 = pasa de grupos.</p>
+<div class="card"><b>Pon estos 32 equipos como clasificados</b> <span class="note">(ordenados por probabilidad de pasar; en ámbar los dudosos de tu lista)</span><div id="r32list" style="margin-top:8px"></div></div>
+<div class="card"><b>⚠️ Solo si vas perdiendo en la última jornada</b> <span class="note">Lo de arriba es la jugada normal. Únicamente para remontar: cambia tus dudosos por estos, que pasan con buena probabilidad pero casi nadie pondrá (+10 que te separan). Si no necesitas arriesgar, ignóralo.</span><div id="bubblelist" style="margin-top:8px"></div></div></main>
+<main id="probs"><div class="card"><p class="note">Probabilidad de cada equipo de llegar a cada fase. Ordenado por "pasa de grupos (R32)". Pulsa una columna para reordenar.</p>
 <div style="position:relative;height:300px;margin-bottom:14px"><canvas id="champChart"></canvas></div>
 <table id="pt"><thead><tr><th data-k="team">Equipo</th><th data-k="R32">R32</th><th data-k="R16">R16</th><th data-k="QF">QF</th><th data-k="SF">SF</th><th data-k="FINAL">Final</th><th data-k="CAMPEON">Campeón</th></tr></thead><tbody></tbody></table></div></main>
 <main id="strat"><div class="card">
@@ -83,7 +83,7 @@ select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:
 <ul><li>Vas a &lt;8 pts del líder → política B (no regales EV).</li>
 <li>Vas a 8–20 pts → contrarian también en los partidos parejos (lado que nadie pisa).</li>
 <li>Vas a &gt;20 pts → flipea el GANADOR en los 3–4 partidos más parejos restantes (máxima varianza: el 70% es del 1º).</li></ul>
-<p><b>Bonos de avance</b>: predícelos con la pestaña Probabilidades (los 32 con mayor P(R32)). Valen hasta 320 pts en conjunto: más que cualquier marcador.</p>
+<p><b>Bonos de avance</b>: están en la pestaña "Quién avanza" (tus 32 ya elegidos por probabilidad). Valen hasta 320 pts en conjunto: más que todos los marcadores. Ahí es donde de verdad se gana.</p>
 <p class="note">Riesgo conocido: si un rival usa el mismo truco de unicidad, ambos seguís cobrando el bono (marcadores distintos siguen siendo únicos); la ventaja se reduce pero no se vuelve en contra.</p></div></main>
 <main id="rules"><div class="card"><table><tbody>
 <tr><td>Marcador exacto</td><td>5</td></tr><tr><td>Ganador o empate acertado</td><td>2</td></tr>
@@ -154,7 +154,8 @@ function render(){
  var done=0; DATA.forEach(function(m){ if(store[m.date+"|"+m.home+"|"+m.away]||m.rx!=null)done++; });
  document.getElementById("stJug").textContent=done+"/72";
 }
-var sortK="CAMPEON",sortAsc=false;
+var sortK="R32",sortAsc=false;
+function pct(v){return (Math.round(v*10)/10).toFixed(1)+"%";}
 function renderProbs(){
  var tb=document.querySelector("#pt tbody"); tb.innerHTML="";
  var rs=PROBS.slice().sort(function(a,b){
@@ -162,8 +163,8 @@ function renderProbs(){
   return sortAsc?a[sortK]-b[sortK]:b[sortK]-a[sortK];});
  rs.forEach(function(r){
   var tr=document.createElement("tr");
-  tr.innerHTML="<td>"+esc(r.team)+"</td><td>"+r.R32+"%±"+r.R32_sd+"</td><td>"+r.R16+"%</td><td>"+r.QF
-   +"%</td><td>"+r.SF+"%</td><td>"+r.FINAL+"%</td><td>"+r.CAMPEON+"%±"+r.CAMPEON_sd+"</td>";
+  tr.innerHTML="<td>"+esc(r.team)+"</td><td>"+pct(r.R32)+"</td><td>"+pct(r.R16)+"</td><td>"+pct(r.QF)
+   +"</td><td>"+pct(r.SF)+"</td><td>"+pct(r.FINAL)+"</td><td>"+pct(r.CAMPEON)+"</td>";
   tb.appendChild(tr); });
 }
 document.querySelectorAll("#pt th").forEach(function(th){ th.addEventListener("click",function(){
@@ -211,28 +212,20 @@ function renderHoy(){
 }
 function renderAvanza(){
  var probMap={}; PROBS.forEach(function(r){probMap[r.team]=r.R32;});
- var diffSet={}; DIFF.forEach(function(d){diffSet[d.team]=true;});
  var picks=ADV.picks.slice().sort(function(a,b){return probMap[b]-probMap[a];});
  var html=picks.map(function(t){
-  var p=probMap[t]; var lock=p>=80;
-  var col=diffSet[t]?"#0e9f6e":(lock?"var(--ink)":"var(--mut)");
-  return '<span style="display:inline-block;margin:3px 6px 3px 0;padding:3px 9px;border:1px solid var(--line);border-radius:8px;font-size:13px;color:'+col+'">'
-   +esc(t)+' <b>'+p+'%</b></span>';
+  var p=probMap[t]; var shaky=p<65;             // dudosos de tu lista
+  var col=shaky?"#d97706":"var(--ink)";
+  return '<span style="display:inline-block;margin:3px 6px 3px 0;padding:3px 9px;border:1px solid '+(shaky?"#d97706":"var(--line)")+';border-radius:8px;font-size:13px;color:'+col+'">'
+   +esc(t)+' <b>'+pct(p)+'</b></span>';
  }).join("");
  document.getElementById("r32list").innerHTML=html;
- var bub=ADV.bubble.slice().sort(function(a,b){return b.leverage-a.leverage;});
- var bh='<div class="t" style="display:grid;grid-template-columns:1fr 70px 90px 60px;gap:4px;font-weight:600;padding:4px 0">'
-  +'<span>equipo</span><span style="text-align:right">pasa</span><span style="text-align:right">rival lo pone</span><span style="text-align:right">tú</span></div>';
- bub.forEach(function(b){
-  var diff=diffSet[b.team];
-  bh+='<div style="display:grid;grid-template-columns:1fr 70px 90px 60px;gap:4px;padding:4px 0;border-top:1px solid var(--line);font-size:14px'
-   +(diff?';color:#0e9f6e;font-weight:600':'')+'">'
-   +'<span>'+(diff?'⚡ ':'')+esc(b.team)+'</span>'
-   +'<span style="text-align:right">'+b.p+'%</span>'
-   +'<span style="text-align:right">'+b.field+'%</span>'
-   +'<span style="text-align:right">'+(b.in?'sí':'—')+'</span></div>';
- });
- document.getElementById("bubblelist").innerHTML=bh;
+ // emergency lever: solo los diferenciadores (cambios contrarian), una lista simple
+ var bh=DIFF.map(function(d){
+  return '<div style="padding:5px 0;border-top:1px solid var(--line);font-size:14px;color:#0e9f6e">'
+   +'<b>'+esc(d.team)+'</b> — pasa '+pct(d.p)+', pero solo el '+d.field+'% de rivales lo pondrá</div>';
+ }).join("");
+ document.getElementById("bubblelist").innerHTML=bh||'<span class="note">Esta vez no hay diferenciadores claros: la burbuja coincide con lo que pondrá todo el mundo.</span>';
 }
 render(); renderProbs(); renderHoy(); renderAvanza();
 </script>
