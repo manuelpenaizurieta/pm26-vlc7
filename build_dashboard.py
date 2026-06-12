@@ -533,7 +533,7 @@ function triggerUpdate(){
   var btn=document.getElementById('updateBtn');
   var tok=localStorage.getItem('gh_pat');
   if(!tok){
-    tok=prompt('Token de GitHub (se guarda solo en tu navegador):\n\nCrea uno en github.com/settings/tokens → "Fine-grained" o clásico con permiso "workflow"');
+    tok=prompt('Token de GitHub (se guarda solo en tu navegador).\n\nCrealo en github.com/settings/tokens > Fine-grained > repo pm26-vlc7 > Actions: Read and write');
     if(!tok)return;
     localStorage.setItem('gh_pat',tok.trim());
     tok=tok.trim();
