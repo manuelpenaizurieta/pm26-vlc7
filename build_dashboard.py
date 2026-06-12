@@ -215,6 +215,7 @@ select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:
 <div class="navwrap"><nav><button data-t="hoy" class="on">Hoy: qué hacer</button><button data-t="tabla">Clasificación</button><button data-t="cal">Calendario y picks</button><button data-t="avanza">Quién avanza</button><button data-t="probs">Probabilidades</button><button data-t="strat">Estrategia</button><button data-t="rules">Reglas</button></nav></div>
 <main id="hoy" class="on">
 <div class="card" style="border-left:3px solid var(--acc);border-radius:0 14px 14px 0"><b>🔒 Cierra apuestas en</b> <span id="countdown" style="font-weight:700;color:var(--acc)">—</span><div id="nextMatch" class="note" style="margin-top:2px"></div></div>
+<div class="card" style="border-left:3px solid #6b7280;border-radius:0 14px 14px 0;font-size:14px">Proxima actualizacion automatica en <b><span id="nextrun">—</span></b></div>
 <div class="card"><b>1 · Las apuestas se colocan solas</b> <span class="note">El sistema apuesta ~1h15 antes de cada partido y revisa cada 15 min hasta el cierre (saque −20 min). No tienes que hacer nada.</span>
 <div id="todayList"></div></div>
 <div class="card"><b>2 · Tu posición en la polla</b> <span class="note">(se actualiza automáticamente con los resultados oficiales)</span>
@@ -509,6 +510,16 @@ function tickCountdown(){
   +" (saque "+next.time+")"+(urgent?" · <b style='color:#dc2626'>¡corre!</b>":"");
 }
 tickCountdown(); setInterval(tickCountdown,20000);
+function tickNextRun(){
+  var now=new Date();
+  var ms=now.getUTCMinutes()*60000+now.getUTCSeconds()*1000+now.getUTCMilliseconds();
+  var interval=15*60000;
+  var left=interval-(ms%interval);
+  var s=Math.ceil(left/1000);
+  var m=Math.floor(s/60), ss=s%60;
+  document.getElementById('nextrun').textContent=(m>0?m+'m ':'')+ss+'s';
+}
+tickNextRun(); setInterval(tickNextRun,1000);
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
