@@ -22,13 +22,14 @@ def user_env(name):
     """Variable de entorno con fallback al registro de Windows (HKCU\\Environment):
     setx guarda ahi y los procesos ya abiertos no lo ven en os.environ."""
     v = os.environ.get(name, "")
-    if v: return v
-    try:
-        import winreg
-        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment") as k:
-            return winreg.QueryValueEx(k, name)[0]
-    except OSError:
-        return ""
+    if not v:
+        try:
+            import winreg
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment") as k:
+                v = winreg.QueryValueEx(k, name)[0]
+        except OSError:
+            pass
+    return v.strip('﻿').strip()  # elimina BOM y espacios (frecuente al copiar secrets)
 
 FD_TOKEN = user_env("FOOTBALL_DATA_TOKEN")
 ODDS_KEY = user_env("ODDS_API_KEY")

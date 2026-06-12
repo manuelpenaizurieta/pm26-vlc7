@@ -13,13 +13,14 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 
 def user_env(name):
     v = os.environ.get(name, "")
-    if v: return v
-    try:
-        import winreg
-        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment") as k:
-            return winreg.QueryValueEx(k, name)[0]
-    except OSError:
-        return ""
+    if not v:
+        try:
+            import winreg
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment") as k:
+                v = winreg.QueryValueEx(k, name)[0]
+        except OSError:
+            pass
+    return v.strip('﻿').strip()  # elimina BOM y espacios (frecuente al copiar secrets)
 
 def _post(url, payload):
     req = urllib.request.Request(url, data=json.dumps(payload).encode(),
