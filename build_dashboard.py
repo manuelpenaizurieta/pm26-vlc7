@@ -199,9 +199,13 @@ select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:
  .stats{grid-template-columns:1fr 1fr;gap:8px}.stat{padding:9px 11px}.stat b{font-size:19px}
  nav button{padding:8px 12px;font-size:13px}
  .pick{font-size:16px!important}.bar{max-width:none}}
+#updateBtn{background:none;border:1px solid var(--line);border-radius:8px;padding:5px 11px;font-size:12px;cursor:pointer;color:var(--sub);margin-top:6px;transition:all .15s}
+#updateBtn:hover{border-color:var(--acc);color:var(--acc)}
+#updateBtn:disabled{opacity:.5;cursor:default}
 </style></head><body>
 <div class="hero"><header><h1>⚽ Polla Mundial 2026 <span class="tag">modelo v4</span></h1>
-<p class="sub">Generado __GEN__ · bracket oficial 2026 · calibrado a 48 cuotas reales (devig Shin, c=__C__) · picks = política B (EV + bono unicidad)</p></header>
+<p class="sub">Generado __GEN__ · bracket oficial 2026 · calibrado a 48 cuotas reales (devig Shin, c=__C__) · picks = política B (EV + bono unicidad)</p>
+<button id="updateBtn" onclick="triggerUpdate()">↻ Actualizar ahora</button></header>
 <div class="stats">
 <div class="stat"><b>__D_FINAL__</b><span>días para la final</span></div>
 <div class="stat"><b id="stJug">0/72</b><span>resultados metidos</span></div>
@@ -523,6 +527,36 @@ tickCountdown(); setInterval(tickCountdown,20000);
    scales:{y:{ticks:{color:tc,callback:function(v){return v+"%";}},grid:{color:dark?"rgba(255,255,255,.07)":"rgba(0,0,0,.06)"}},
     x:{ticks:{color:tc,maxRotation:45,autoSkip:false},grid:{display:false}}}}});
 })();
+</script>
+<script>
+function triggerUpdate(){
+  var btn=document.getElementById('updateBtn');
+  var tok=localStorage.getItem('gh_pat');
+  if(!tok){
+    tok=prompt('Token de GitHub (se guarda solo en tu navegador):\n\nCrea uno en github.com/settings/tokens → "Fine-grained" o clásico con permiso "workflow"');
+    if(!tok)return;
+    localStorage.setItem('gh_pat',tok.trim());
+    tok=tok.trim();
+  }
+  btn.textContent='⏳ Lanzando...'; btn.disabled=true;
+  fetch('https://api.github.com/repos/manuelpenaizurieta/pm26-vlc7/actions/workflows/update.yml/dispatches',{
+    method:'POST',
+    headers:{'Authorization':'token '+tok,'Content-Type':'application/json'},
+    body:JSON.stringify({ref:'main'})
+  }).then(function(r){
+    if(r.status===204){
+      btn.textContent='✓ En marcha — recarga en ~2 min';
+      setTimeout(function(){btn.textContent='↻ Actualizar ahora';btn.disabled=false;},8000);
+    } else if(r.status===401||r.status===403){
+      localStorage.removeItem('gh_pat');
+      btn.textContent='↻ Actualizar ahora'; btn.disabled=false;
+      alert('Token inválido o sin permiso "workflow" — borrado. Vuelve a intentarlo.');
+    } else {
+      btn.textContent='↻ Actualizar ahora'; btn.disabled=false;
+      alert('Error '+r.status+' — revisa el token.');
+    }
+  }).catch(function(){btn.textContent='↻ Actualizar ahora';btn.disabled=false;alert('Error de red.');});
+}
 </script></body></html>"""
 
 def setup_items():
