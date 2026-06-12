@@ -1,0 +1,39 @@
+name: Actualizar polla mundial
+
+on:
+  schedule:
+    - cron: '0 * * * *'   # cada hora (UTC)
+  workflow_dispatch:        # lanzamiento manual desde GitHub
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependencias
+        run: pip install numpy scipy
+
+      - name: Ejecutar pipeline
+        env:
+          POLLA_EMAIL: ${{ secrets.POLLA_EMAIL }}
+          POLLA_PASS: ${{ secrets.POLLA_PASS }}
+          FOOTBALL_DATA_TOKEN: ${{ secrets.FOOTBALL_DATA_TOKEN }}
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+        run: python daily_update.py
+
+      - name: Publicar tablero
+        run: |
+          cp polla_v4.html index.html
+          git config user.email "github-actions@github.com"
+          git config user.name "github-actions[bot]"
+          git add index.html
+          git diff --staged --quiet || git commit -m "actualizacion $(date -u +%Y-%m-%dT%H:%M)"
+          git push

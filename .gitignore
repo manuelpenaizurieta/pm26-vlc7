@@ -1,0 +1,19 @@
+# nunca subir datos privados de la polla
+polla_*.json
+group_stats.json
+results_live.json
+elo_live.json
+match_odds.json
+odds_latest.json
+*.log
+
+# generados en cada ejecucion (se suben solo via index.html)
+polla_v4.html
+wc_probs*.json
+wc_pool_strategy.json
+advance_picks.json
+picks.json
+
+# python
+__pycache__/
+*.pyc
