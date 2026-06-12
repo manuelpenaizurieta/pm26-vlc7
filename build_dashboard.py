@@ -595,7 +595,8 @@ brier_str = f"{brier:.3f}" if brier is not None else "—"
 fav = max(PROBS["rows"], key=lambda r: r["CAMPEON"])
 dias_final = max(0, (datetime.date(2026, 7, 19) - datetime.date.today()).days)
 
-html = (HTML.replace("__GEN__", datetime.datetime.now().strftime("%d %b %Y %H:%M"))
+_now_cest = datetime.datetime.utcnow() + datetime.timedelta(hours=2)
+html = (HTML.replace("__GEN__", _now_cest.strftime("%d %b %Y %H:%M") + " (Valencia)")
             .replace("__D_FINAL__", str(dias_final))
             .replace("__P1__", str(p1_live))
             .replace("__P1_CI__", p1_ci)
