@@ -205,7 +205,7 @@ select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:
 </style></head><body>
 <div class="hero"><header><h1>⚽ Polla Mundial 2026 <span class="tag">modelo v4</span></h1>
 <p class="sub">Generado __GEN__ · bracket oficial 2026 · calibrado a 48 cuotas reales (devig Shin, c=__C__) · picks = política B (EV + bono unicidad)</p>
-<button id="updateBtn" onclick="triggerUpdate()">↻ Actualizar ahora</button></header>
+<button id="updateBtn" onclick="triggerUpdate()">Actualizar ahora</button></header>
 <div class="stats">
 <div class="stat"><b>__D_FINAL__</b><span>días para la final</span></div>
 <div class="stat"><b id="stJug">0/72</b><span>resultados metidos</span></div>
@@ -538,24 +538,24 @@ function triggerUpdate(){
     localStorage.setItem('gh_pat',tok.trim());
     tok=tok.trim();
   }
-  btn.textContent='⏳ Lanzando...'; btn.disabled=true;
+  btn.textContent='Lanzando...'; btn.disabled=true;
   fetch('https://api.github.com/repos/manuelpenaizurieta/pm26-vlc7/actions/workflows/update.yml/dispatches',{
     method:'POST',
     headers:{'Authorization':'token '+tok,'Content-Type':'application/json'},
     body:JSON.stringify({ref:'main'})
   }).then(function(r){
     if(r.status===204){
-      btn.textContent='✓ En marcha — recarga en ~2 min';
-      setTimeout(function(){btn.textContent='↻ Actualizar ahora';btn.disabled=false;},8000);
+      btn.textContent='Lanzado - recarga en 2 min';
+      setTimeout(function(){btn.textContent='Actualizar ahora';btn.disabled=false;},8000);
     } else if(r.status===401||r.status===403){
       localStorage.removeItem('gh_pat');
-      btn.textContent='↻ Actualizar ahora'; btn.disabled=false;
-      alert('Token inválido o sin permiso "workflow" — borrado. Vuelve a intentarlo.');
+      btn.textContent='Actualizar ahora'; btn.disabled=false;
+      alert('Token invalido - borrado. Vuelve a intentarlo.');
     } else {
-      btn.textContent='↻ Actualizar ahora'; btn.disabled=false;
-      alert('Error '+r.status+' — revisa el token.');
+      btn.textContent='Actualizar ahora'; btn.disabled=false;
+      alert('Error '+r.status);
     }
-  }).catch(function(){btn.textContent='↻ Actualizar ahora';btn.disabled=false;alert('Error de red.');});
+  }).catch(function(){btn.textContent='Actualizar ahora';btn.disabled=false;alert('Error de red');});
 }
 </script></body></html>"""
 
