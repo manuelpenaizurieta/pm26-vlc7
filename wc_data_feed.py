@@ -14,7 +14,7 @@
 # Uso diario (lo llama la tarea programada de las 08:00):
 #   python wc_data_feed.py            -> baja resultados nuevos, actualiza Elo (Q5),
 #                                        guarda elo_live.json y odds_latest.json
-import json, os, urllib.request, datetime
+import json, os, time, urllib.request, datetime
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -90,8 +90,18 @@ def fetch_results():
                     "gh": ft["home"], "ga": ft["away"], "stage": m["stage"]})
     return out
 
+ODDS_FRESH_SECS = 3 * 3600  # rellamar la API solo si el archivo tiene >3h de antiguedad
+
+def _is_fresh(path):
+    return os.path.exists(path) and time.time() - os.path.getmtime(path) < ODDS_FRESH_SECS
+
 def fetch_outright_odds():
     """Cuotas de campeon (decimales, mediana entre casas) desde The Odds API."""
+    p = os.path.join(HERE, "odds_latest.json")
+    if _is_fresh(p):
+        print("odds_latest.json reciente (<3h), omitiendo llamada a The Odds API")
+        with open(p, encoding="utf-8") as f:
+            return json.load(f)
     if not ODDS_KEY:
         print("AVISO: falta ODDS_API_KEY (registro gratis en the-odds-api.com)")
         return {}
@@ -111,6 +121,11 @@ def fetch_outright_odds():
 def fetch_match_odds():
     """Cuotas 1X2 de cada partido (mediana entre ~20 casas). Es LA señal de mercado
     fina: incorpora alineaciones y noticias al minuto. 1 peticion por ejecucion."""
+    p = os.path.join(HERE, "match_odds.json")
+    if _is_fresh(p):
+        print("match_odds.json reciente (<3h), omitiendo llamada a The Odds API")
+        with open(p, encoding="utf-8") as f:
+            return json.load(f)
     if not ODDS_KEY: return []
     import statistics
     url = (f"https://api.the-odds-api.com/v4/sports/soccer_fifa_world_cup/odds"

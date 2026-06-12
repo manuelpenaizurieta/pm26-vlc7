@@ -5,14 +5,27 @@
 # correcta -> la deja. Salta los partidos cerrados (no se pueden tocar).
 # Cierre = saque - 20 min. Asi, ejecutado cada hora, la ultima pasada antes del
 # cierre deja la apuesta definitiva ("revisar ~1h antes y dejar lo correcto").
-import sys, json, os, time, urllib.request, urllib.error
+import sys, json, os, time, datetime, urllib.request, urllib.error
 from polla_scraper import login, user_env, DB
 from polla_sync import CODE
 from polla_bet import GID, SUB, SC, put, get
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 CLOSE_MS = 20 * 60 * 1000
-HOURS_AHEAD = 6        # solo apuesta partidos que cierran dentro de esta ventana
+HOURS_AHEAD = 1.5      # apuesta partidos que cierran en las proximas 1.5h (~1h15 antes del saque)
+LOG_PATH = os.path.join(HERE, "apuestas_log.json")
+
+def _log(entry):
+    log = []
+    if os.path.exists(LOG_PATH):
+        try:
+            with open(LOG_PATH, encoding="utf-8") as f:
+                log = json.load(f)
+        except Exception:
+            log = []
+    log.append(entry)
+    with open(LOG_PATH, "w", encoding="utf-8") as f:
+        json.dump(log, f, ensure_ascii=False, indent=1)
 
 def run(hours=HOURS_AHEAD):
     window = hours * 3600 * 1000
@@ -22,6 +35,7 @@ def run(hours=HOURS_AHEAD):
     picks = json.load(open(os.path.join(HERE, "picks.json"), encoding="utf-8"))
     cal_idx = {frozenset((c["home"], c["away"])): c for c in cal}
     now = time.time() * 1000
+    ts_str = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M")
     placed, updated, left, skipped = 0, 0, 0, 0
     for cm, m in matches.items():
         ha, hb = CODE.get(m.get("tA")), CODE.get(m.get("tB"))
@@ -36,21 +50,28 @@ def run(hours=HOURS_AHEAD):
         ts = m.get("ts")
         if not ts or now > ts - CLOSE_MS:      # cerrado o sin hora -> no tocar
             skipped += 1; continue
-        if ts - CLOSE_MS - now > window:       # aun lejos -> esperar (regla 1h antes)
+        if ts - CLOSE_MS - now > window:       # aun lejos -> esperar
             skipped += 1; continue
         flip = (c["home"] != ha)               # orientar a teamA(local)=tA de la web
         gA, gB = (pk[1], pk[0]) if flip else (pk[0], pk[1])
         path = f"bets/{cm}/{GID}/{uid}/{SUB}/prediction"
         cur = get(path, tok)
         if isinstance(cur, dict) and cur.get("gA") == gA and cur.get("gB") == gB:
-            left += 1; continue                # ya correcta -> dejar
+            left += 1
+            _log({"t": ts_str, "cm": cm, "match": f"{c['home']}|{c['away']}",
+                  "pick": f"{gA}-{gB}", "accion": "ok"})
+            continue
         w = "teamA" if gA > gB else ("teamB" if gA < gB else "E")
         obj = {"gA": gA, "gB": gB, "w": w, "ts": int(now),
                "fs": f"{gA}-{gB}-{w}", "sc": SC}
         put(path, tok, obj)
+        accion = "actualizada" if isinstance(cur, dict) else "NUEVA"
         if isinstance(cur, dict): updated += 1
         else: placed += 1
-        print(f"  {cm} {c['home']}-{c['away']}: {gA}-{gB} ({'actualizada' if isinstance(cur,dict) else 'NUEVA'})")
+        prev = f"{cur['gA']}-{cur['gB']}" if isinstance(cur, dict) else "-"
+        _log({"t": ts_str, "cm": cm, "match": f"{c['home']}|{c['away']}",
+              "pick": f"{gA}-{gB}", "prev": prev, "accion": accion})
+        print(f"  {cm} {c['home']}-{c['away']}: {gA}-{gB} ({accion})")
     print(f"Auto-apuesta: {placed} nuevas, {updated} actualizadas, {left} ya correctas, {skipped} cerradas/sin hora")
 
 if __name__ == "__main__":

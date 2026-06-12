@@ -9,6 +9,7 @@ live_stats.json
 match_odds.json
 odds_latest.json
 *.log
+apuestas_log.json
 
 # generados en cada ejecucion (se suben solo via index.html)
 polla_v4.html
