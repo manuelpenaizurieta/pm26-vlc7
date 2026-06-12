@@ -61,7 +61,7 @@ select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:
  .pick{font-size:16px!important}.bar{max-width:none}}
 </style></head><body>
 <div class="hero"><header><h1>⚽ Polla Mundial 2026 <span class="tag">modelo v4</span></h1>
-<p class="sub">Generado 12 Jun 2026 11:39 · bracket oficial 2026 · calibrado a 48 cuotas reales (devig Shin, c=0.0028) · picks = política B (EV + bono unicidad)</p></header>
+<p class="sub">Generado 12 Jun 2026 11:52 · bracket oficial 2026 · calibrado a 48 cuotas reales (devig Shin, c=0.0028) · picks = política B (EV + bono unicidad)</p></header>
 <div class="stats">
 <div class="stat"><b>37</b><span>días para la final</span></div>
 <div class="stat"><b id="stJug">0/72</b><span>resultados metidos</span></div>
@@ -72,12 +72,22 @@ select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:
 <main id="hoy" class="on">
 <div class="card" style="border-left:3px solid var(--acc);border-radius:0 14px 14px 0"><b>🔒 Cierra apuestas en</b> <span id="countdown" style="font-weight:700;color:var(--acc)">—</span><div id="nextMatch" class="note" style="margin-top:2px"></div></div>
 <div class="card"><b>1 · Mete estos picks en pollamundial.org</b> <span class="note">(próximas 26 h, hora de Valencia — el pick grande es el de la política B)</span><div id="todayList"></div></div>
-<div class="card"><b>2 · Tu posición en la polla</b><br>
-<label class="note">Tus puntos: <input class="res" id="misp" inputmode="numeric"></label>
-<label class="note" style="margin-left:10px">Puntos del líder: <input class="res" id="lidp" inputmode="numeric"></label>
-<div id="rec" class="note" style="margin-top:8px">Rellena los dos números después de cada jornada (los ves en la web de la polla) y te digo qué marcha usar.</div></div>
-<div class="card"><b>3 · Estado del sistema</b><ul style="margin:8px 0 4px;padding-left:20px;font-size:14px"><li>✅ Resultados automáticos conectados (football-data.org)</li><li>✅ Cuotas de 48 equipos conectadas (devig Shin activo)</li><li>✅ Elo en vivo activo (se ajusta con cada resultado)</li></ul>
-<p class="note">Cada mañana: doble clic en <b>actualizar_polla.bat</b> (o <code>python daily_update.py</code>) y vuelve a abrir este archivo.</p></div></main>
+<div class="card"><b>2 · Tu posición en la polla</b> <span class="note">(automático, con la tabla real)</span>
+<div id="posbox" style="margin-top:6px"></div>
+<div id="rec" class="note" style="margin-top:8px"></div></div>
+<div class="card"><b>3 · Qué hace el sistema (solo, sin que toques nada)</b>
+<ul style="margin:8px 0 6px;padding-left:20px;font-size:14px;line-height:1.9">
+<li>📊 Calibra el modelo con <b>48 cuotas reales</b> de mercado (devig de Shin)</li>
+<li>🎲 Simula <b>30.000 Mundiales</b> (Monte Carlo, bracket oficial FIFA)</li>
+<li>👥 Inicia sesión en tu cuenta y baja los <b>picks reales de tu grupo</b></li>
+<li>🎯 Calcula tu <b>marcador único</b> óptimo (maximiza quedar 1º)</li>
+<li>🏆 Predice los <b>bonos de avance</b> (los 32 que pasan)</li>
+<li>✅ Baja <b>resultados oficiales</b> y actualiza tu <b>tabla del grupo</b></li>
+<li>🤖 <b>Apuesta por ti</b> en la web antes del cierre</li>
+<li>📱 Republica el tablero en tu móvil</li>
+</ul>
+<div class="note">Última actualización: <b>12 Jun 2026 11:52</b> · estado de las conexiones:</div>
+<ul style="margin:6px 0 0;padding-left:20px;font-size:14px"><li>✅ Resultados automáticos conectados (football-data.org)</li><li>✅ Cuotas de 48 equipos conectadas (devig Shin activo)</li><li>✅ Elo en vivo activo (se ajusta con cada resultado)</li></ul></div></main>
 <main id="tabla">
 <div class="card"><b>Clasificación de tu grupo</b> <span class="note">"Polla Mundial 2026" · actualizada automáticamente con los puntos oficiales de la web.</span>
 <div class="tablewrap" style="margin-top:8px"><table id="standtbl"><thead><tr><th>#</th><th>Jugador</th><th>Exa</th><th>Gan</th><th>Gol</th><th>Úni</th><th>Pts</th></tr></thead><tbody></tbody></table></div></div></main>
@@ -278,13 +288,13 @@ function renderHoy(){
   }
   refresh();
   list.appendChild(div); });
- var misp=document.getElementById("misp"), lidp=document.getElementById("lidp");
- misp.value=store._misp||""; lidp.value=store._lidp||"";
  function rec(){
-  store._misp=misp.value; store._lidp=lidp.value; save();
-  var mi=parseInt(misp.value,10), li=parseInt(lidp.value,10);
-  var out=document.getElementById("rec");
-  if(isNaN(mi)||isNaN(li)){ out.textContent="Rellena los dos números después de cada jornada (los ves en la web de la polla) y te digo qué marcha usar."; return; }
+  var out=document.getElementById("rec"); var box=document.getElementById("posbox");
+  var me=STANDINGS.filter(function(r){return r.me;}).sort(function(a,b){return b.pts-a.pts;})[0];
+  var lead=STANDINGS[0];
+  if(!me||!STANDINGS.length){ box.textContent=""; out.textContent="Aún sin puntos (no se ha jugado nada). En cuanto haya resultados, aquí verás tu posición y qué marcha usar."; return; }
+  var mi=me.pts, li=lead.pts;
+  box.innerHTML="Vas <b>"+me.pos+"º</b> de "+STANDINGS.length+" · <b>"+mi+" pts</b> · líder ("+esc(lead.name)+") "+li+" pts";
   var d=li-mi;
   if(d<=0){ out.innerHTML="<b style='color:var(--ok)'>Vas LÍDER (+"+(-d)+").</b> Sigue con los picks tal cual (política B). No arriesgues más de lo que ya arriesga el sistema."; }
   else if(d<8){ out.innerHTML="<b>A "+d+" pts del líder.</b> Sigue con los picks tal cual (política B). Es ruido, no cambies nada."; }
@@ -302,7 +312,7 @@ function renderHoy(){
     +" pon <b>"+fx+"-"+fy+"</b> (gana "+esc(dog)+", el lado que nadie pisa)</li>";
   }).join("")+"</ul>";
  }
- misp.addEventListener("input",rec); lidp.addEventListener("input",rec); rec();
+ rec();
 }
 function renderAvanza(){
  var probMap={}; PROBS.forEach(function(r){probMap[r.team]=r.R32;});
