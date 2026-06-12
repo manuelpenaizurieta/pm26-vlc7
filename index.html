@@ -61,7 +61,7 @@ select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:
  .pick{font-size:16px!important}.bar{max-width:none}}
 </style></head><body>
 <div class="hero"><header><h1>⚽ Polla Mundial 2026 <span class="tag">modelo v4</span></h1>
-<p class="sub">Generado 12 Jun 2026 02:03 · bracket oficial 2026 · calibrado a 48 cuotas reales (devig Shin, c=0.0028) · picks = política B (EV + bono unicidad)</p></header>
+<p class="sub">Generado 12 Jun 2026 11:27 · bracket oficial 2026 · calibrado a 48 cuotas reales (devig Shin, c=0.0028) · picks = política B (EV + bono unicidad)</p></header>
 <div class="stats">
 <div class="stat"><b>37</b><span>días para la final</span></div>
 <div class="stat"><b id="stJug">0/72</b><span>resultados metidos</span></div>
@@ -83,8 +83,9 @@ select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:
 <div class="tablewrap" style="margin-top:8px"><table id="standtbl"><thead><tr><th>#</th><th>Jugador</th><th>Exa</th><th>Gan</th><th>Gol</th><th>Úni</th><th>Pts</th></tr></thead><tbody></tbody></table></div></div></main>
 <main id="cal">
 <div class="card"><span class="tot" id="score">0 pts</span> <span class="note" id="scoren">— introduce resultados (ej. 2-1) y calculo los puntos de tu pick valiente. El bono unicidad (+2) no es calculable aquí: súmalo cuando lo veas en la web.</span><br>
-<label class="note">Filtrar grupo: <select id="gf"><option value="">todos</option></select></label>
-<label class="note" style="margin-left:12px"><input type="checkbox" id="onlyClose"> solo partidos parejos ⚖</label></div>
+<label class="note">Ver: <select id="statef"><option value="pend">⏳ pendientes</option><option value="played">✅ jugados</option><option value="all">todos</option></select></label>
+<label class="note" style="margin-left:12px">Grupo: <select id="gf"><option value="">todos</option></select></label>
+<label class="note" style="margin-left:12px"><input type="checkbox" id="onlyClose"> parejos ⚖</label></div>
 <div id="days"></div></main>
 <main id="avanza">
 <div class="card"><b>Aquí se gana la polla.</b> <span class="note">Acertar los 32 que pasan vale hasta 320 pts — más que todos los marcadores juntos. El bono es por equipo (R32 10 · octavos 8 · cuartos 4 · semis 2 · final 5). Predice por <b>probabilidad real</b> de pasar, no por fama.</span></div>
@@ -133,11 +134,20 @@ var gf=document.getElementById("gf");
 gf.addEventListener("change",render);
 var onlyClose=document.getElementById("onlyClose");
 onlyClose.addEventListener("change",render);
+var statef=document.getElementById("statef");
+statef.addEventListener("change",render);
 function isClose(m){return Math.abs(m.ph-m.pa)<8;}
+function isPlayed(m){ return (m.rx!=null&&m.ry!=null) || !!store[m.date+"|"+m.home+"|"+m.away]; }
 function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");}
 function render(){
  var hoy=todayStr(); var cont=document.getElementById("days"); cont.innerHTML="";
- var byDay={}; DATA.forEach(function(m){ if(gf.value&&m.g!==gf.value)return; if(onlyClose.checked&&!isClose(m))return; (byDay[m.date]=byDay[m.date]||[]).push(m); });
+ var st=statef.value;
+ var byDay={}; DATA.forEach(function(m){
+  if(gf.value&&m.g!==gf.value)return;
+  if(onlyClose.checked&&!isClose(m))return;
+  if(st==="pend"&&isPlayed(m))return;
+  if(st==="played"&&!isPlayed(m))return;
+  (byDay[m.date]=byDay[m.date]||[]).push(m); });
  var total=0,nres=0;
  Object.keys(byDay).sort().forEach(function(d){
   var h=document.createElement("div"); h.className="day"+(d===hoy?" today":"");
