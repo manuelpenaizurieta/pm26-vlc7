@@ -61,7 +61,7 @@ select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:
  .pick{font-size:16px!important}.bar{max-width:none}}
 </style></head><body>
 <div class="hero"><header><h1>⚽ Polla Mundial 2026 <span class="tag">modelo v4</span></h1>
-<p class="sub">Generado 12 Jun 2026 11:27 · bracket oficial 2026 · calibrado a 48 cuotas reales (devig Shin, c=0.0028) · picks = política B (EV + bono unicidad)</p></header>
+<p class="sub">Generado 12 Jun 2026 11:29 · bracket oficial 2026 · calibrado a 48 cuotas reales (devig Shin, c=0.0028) · picks = política B (EV + bono unicidad)</p></header>
 <div class="stats">
 <div class="stat"><b>37</b><span>días para la final</span></div>
 <div class="stat"><b id="stJug">0/72</b><span>resultados metidos</span></div>
@@ -178,9 +178,14 @@ function render(){
   });
   cont.appendChild(card);
  });
- document.getElementById("score").textContent=total+" pts";
- if(nres)document.getElementById("scoren").textContent="("+nres+" resultados introducidos; sin contar bonos de unicidad ni de avance)";
- var done=0; DATA.forEach(function(m){ if(store[m.date+"|"+m.home+"|"+m.away]||m.rx!=null)done++; });
+ // total y contador SIEMPRE sobre TODOS los partidos jugados (no solo el filtro)
+ var gtot=0,gres=0,done=0;
+ DATA.forEach(function(m){
+  var v=store[m.date+"|"+m.home+"|"+m.away]||((m.rx!=null&&m.ry!=null)?m.rx+"-"+m.ry:"");
+  if(v){ var r=v.split("-"); gtot+=pts(m.bx,m.by,+r[0],+r[1]); gres++; done++; }
+ });
+ document.getElementById("score").textContent=gtot+" pts";
+ document.getElementById("scoren").textContent="("+gres+" partidos jugados; sin contar bonos de unicidad ni de avance — esos los ves en la pestaña Clasificación)";
  document.getElementById("stJug").textContent=done+"/72";
 }
 var sortK="R32",sortAsc=false;
