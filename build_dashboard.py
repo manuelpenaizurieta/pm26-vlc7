@@ -517,9 +517,9 @@ function tickNextRun(){
   var left=interval-(ms%interval);
   var s=Math.ceil(left/1000);
   var m=Math.floor(s/60), ss=s%60;
-  var txt=(m>0?m+'m ':'')+ss+'s';
   var el=document.getElementById('nextrunStat');
-  if(el) el.textContent=txt;
+  if(s<=3){ if(el) el.textContent='Recargando...'; location.reload(); return; }
+  if(el) el.textContent=(m>0?m+'m ':'')+ss+'s';
 }
 tickNextRun(); setInterval(tickNextRun,1000);
 </script>
