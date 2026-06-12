@@ -546,8 +546,13 @@ function triggerUpdate(){
     body:JSON.stringify({ref:'main'})
   }).then(function(r){
     if(r.status===204){
-      btn.textContent='Lanzado - recarga en 2 min';
-      setTimeout(function(){btn.textContent='Actualizar ahora';btn.disabled=false;},8000);
+      var secs=180;
+      function tick(){
+        btn.textContent='Recargando en '+secs+'s...';
+        if(secs<=0){location.reload();return;}
+        secs--; setTimeout(tick,1000);
+      }
+      tick();
     } else if(r.status===401||r.status===403){
       localStorage.removeItem('gh_pat');
       btn.textContent='Actualizar ahora'; btn.disabled=false;
