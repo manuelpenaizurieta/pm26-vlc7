@@ -35,9 +35,11 @@ jobs:
 
       - name: Publicar tablero
         run: |
-          cp polla_v4.html index.html
           git config user.email "github-actions@github.com"
           git config user.name "github-actions[bot]"
+          git fetch origin main
+          git reset --hard origin/main
+          cp polla_v4.html index.html
           git add index.html
           git diff --staged --quiet || git commit -m "actualizacion $(date -u +%Y-%m-%dT%H:%M)"
-          git pull --rebase && git push
+          git push
