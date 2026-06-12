@@ -1,8 +1,11 @@
 # nunca subir datos privados de la polla
 polla_*.json
+standings.json
+advance_picks.json
 group_stats.json
 results_live.json
 elo_live.json
+live_stats.json
 match_odds.json
 odds_latest.json
 *.log

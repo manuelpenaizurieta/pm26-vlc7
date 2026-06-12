@@ -31,6 +31,7 @@ if __name__ == "__main__":
     # picks reales de tu grupo desde pollamundial.org (privado, local)
     if run("polla_fetch.py"):
         run("polla_sync.py")
-    run("build_dashboard.py")
+    run("live_p1.py")         # P(1o) en vivo: standings + simulacion restantes -> live_stats.json
+    run("build_dashboard.py") # carga live_stats.json recien generado
     run("polla_autobet.py")   # revisa/actualiza tus apuestas (regla: ~1h antes del cierre)
     print("\nListo: abre polla_v4.html")

@@ -205,8 +205,8 @@ select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:
 <div class="stats">
 <div class="stat"><b>__D_FINAL__</b><span>días para la final</span></div>
 <div class="stat"><b id="stJug">0/72</b><span>resultados metidos</span></div>
-<div class="stat"><b>__P1__%</b><span>P(quedar 1º) simulada</span></div>
-<div class="stat"><b>__FAV__</b><span>favorito (P campeón __FAVP__%)</span></div>
+<div class="stat"><b>__P1__%</b><span>P(ganar) en vivo <span style="font-size:10px;opacity:.7">__P1_CI__pp · pos.__RANK__</span></span></div>
+<div class="stat"><b>Brier __BRIER__</b><span>calibración modelo (↓ mejor)</span></div>
 </div></div>
 <div class="navwrap"><nav><button data-t="hoy" class="on">Hoy: qué hacer</button><button data-t="tabla">Clasificación</button><button data-t="cal">Calendario y picks</button><button data-t="avanza">Quién avanza</button><button data-t="probs">Probabilidades</button><button data-t="strat">Estrategia</button><button data-t="rules">Reglas</button></nav></div>
 <main id="hoy" class="on">
@@ -543,18 +543,29 @@ def setup_items():
     ]
     return "".join(items)
 
-p1 = "?"
+# P(1o) en vivo (live_p1.py lo genera antes que este script en daily_update)
+LIVE = {}
 try:
-    with open(os.path.join(HERE, "wc_pool_strategy.json"), encoding="utf-8") as f:
-        p1 = json.load(f)["policies"]["B"]["win"]
-except (FileNotFoundError, KeyError):
+    with open(os.path.join(HERE, "live_stats.json"), encoding="utf-8") as f:
+        LIVE = json.load(f)
+except FileNotFoundError:
     pass
+
+p1_live = LIVE.get("p1", "?")
+p1_ci   = f"±{round((LIVE.get('ci_high', 0) - LIVE.get('ci_low', 0)) / 2, 1)}" if LIVE else ""
+p1_rank = LIVE.get("my_rank", "?")
+brier   = LIVE.get("brier")
+brier_str = f"{brier:.3f}" if brier is not None else "—"
+
 fav = max(PROBS["rows"], key=lambda r: r["CAMPEON"])
 dias_final = max(0, (datetime.date(2026, 7, 19) - datetime.date.today()).days)
 
 html = (HTML.replace("__GEN__", datetime.datetime.now().strftime("%d %b %Y %H:%M"))
             .replace("__D_FINAL__", str(dias_final))
-            .replace("__P1__", str(p1))
+            .replace("__P1__", str(p1_live))
+            .replace("__P1_CI__", p1_ci)
+            .replace("__RANK__", str(p1_rank))
+            .replace("__BRIER__", brier_str)
             .replace("__FAV__", fav["team"]).replace("__FAVP__", str(fav["CAMPEON"]))
             .replace("__C__", str(C))
             .replace("__DATA__", json.dumps(matches, ensure_ascii=False))
