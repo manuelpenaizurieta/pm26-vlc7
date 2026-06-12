@@ -215,20 +215,21 @@ select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:
 <div class="navwrap"><nav><button data-t="hoy" class="on">Hoy: qué hacer</button><button data-t="tabla">Clasificación</button><button data-t="cal">Calendario y picks</button><button data-t="avanza">Quién avanza</button><button data-t="probs">Probabilidades</button><button data-t="strat">Estrategia</button><button data-t="rules">Reglas</button></nav></div>
 <main id="hoy" class="on">
 <div class="card" style="border-left:3px solid var(--acc);border-radius:0 14px 14px 0"><b>🔒 Cierra apuestas en</b> <span id="countdown" style="font-weight:700;color:var(--acc)">—</span><div id="nextMatch" class="note" style="margin-top:2px"></div></div>
-<div class="card"><b>1 · Mete estos picks en pollamundial.org</b> <span class="note">(próximas 26 h, hora de Valencia — el pick grande es el de la política B)</span><div id="todayList"></div></div>
-<div class="card"><b>2 · Tu posición en la polla</b> <span class="note">(automático, con la tabla real)</span>
+<div class="card"><b>1 · Las apuestas se colocan solas</b> <span class="note">El sistema apuesta ~1h15 antes de cada partido y revisa cada 15 min hasta el cierre (saque −20 min). No tienes que hacer nada.</span>
+<div id="todayList"></div></div>
+<div class="card"><b>2 · Tu posición en la polla</b> <span class="note">(se actualiza automáticamente con los resultados oficiales)</span>
 <div id="posbox" style="margin-top:6px"></div>
 <div id="rec" class="note" style="margin-top:8px"></div></div>
-<div class="card"><b>3 · Qué hace el sistema (solo, sin que toques nada)</b>
+<div class="card"><b>3 · Qué hace el sistema cada 15 minutos (sin que toques nada)</b>
 <ul style="margin:8px 0 6px;padding-left:20px;font-size:14px;line-height:1.9">
 <li>📊 Calibra el modelo con <b>48 cuotas reales</b> de mercado (devig de Shin)</li>
 <li>🎲 Simula <b>30.000 Mundiales</b> (Monte Carlo, bracket oficial FIFA)</li>
 <li>👥 Inicia sesión en tu cuenta y baja los <b>picks reales de tu grupo</b></li>
 <li>🎯 Calcula tu <b>marcador único</b> óptimo (maximiza quedar 1º)</li>
 <li>🏆 Predice los <b>bonos de avance</b> (los 32 que pasan)</li>
-<li>✅ Baja <b>resultados oficiales</b> y actualiza tu <b>tabla del grupo</b></li>
-<li>🤖 <b>Apuesta por ti</b> en la web antes del cierre</li>
-<li>📱 Republica el tablero en tu móvil</li>
+<li>✅ Baja <b>resultados oficiales</b> y actualiza tu <b>clasificación</b></li>
+<li>🤖 <b>Apuesta por ti</b> ~1h15 antes del partido y revisa hasta el cierre</li>
+<li>📱 Republica este tablero</li>
 </ul>
 <div class="note">Última actualización: <b>__GEN__</b> · estado de las conexiones:</div>
 <ul style="margin:6px 0 0;padding-left:20px;font-size:14px">__SETUP__</ul></div></main>
