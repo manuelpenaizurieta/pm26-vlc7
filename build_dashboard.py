@@ -207,9 +207,10 @@ select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:
 <p class="sub">Generado __GEN__ · bracket oficial 2026 · calibrado a 48 cuotas reales (devig Shin, c=__C__) · picks = política B (EV + bono unicidad)</p>
 <button id="updateBtn" onclick="triggerUpdate()">Actualizar ahora</button></header>
 <div class="stats">
+<div class="stat"><b>__D_FINAL__</b><span>días para la final</span></div>
 <div class="stat"><b id="stJug">0/72</b><span>resultados metidos</span></div>
-<div class="stat"><b>__P1__%</b><span>P(ganar) en vivo <span style="font-size:10px;opacity:.7">__P1_CI__pp</span></span></div>
-<div class="stat"><b>__RANK__º / 10</b><span>tu posición</span></div>
+<div class="stat"><b>__P1__%</b><span>P(ganar) en vivo <span style="font-size:10px;opacity:.7">__P1_CI__pp · pos.__RANK__</span></span></div>
+<div class="stat"><b>Brier __BRIER__</b><span>calibración modelo (↓ mejor)</span></div>
 <div class="stat"><b><span id="nextrunStat">—</span></b><span>próxima actualización</span></div>
 </div></div>
 <div class="navwrap"><nav><button data-t="hoy" class="on">Hoy: qué hacer</button><button data-t="tabla">Clasificación</button><button data-t="cal">Calendario y picks</button><button data-t="avanza">Quién avanza</button><button data-t="probs">Probabilidades</button><button data-t="strat">Estrategia</button><button data-t="rules">Reglas</button></nav></div>
