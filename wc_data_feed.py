@@ -254,6 +254,7 @@ if __name__ == "__main__":
         print("elo_live.json actualizado -> re-corre wc_model_v3.py con estos ratings")
     modds = fetch_match_odds()
     print(f"match_odds.json: cuotas 1X2 de {len(modds)} partidos")
+    track_odds_movement()
     odds = fetch_outright_odds()
     if odds:
         with open(os.path.join(HERE, "odds_latest.json"), "w", encoding="utf-8") as f:

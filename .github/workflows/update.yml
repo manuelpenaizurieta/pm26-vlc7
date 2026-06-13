@@ -2,7 +2,12 @@ name: Actualizar polla mundial
 
 on:
   schedule:
-    - cron: '*/15 * * * *' # cada 15 minutos (UTC)
+    - cron: '5 * * * *'   # cada hora a las :05 UTC (GitHub es más fiable con intervalos >=1h)
+    - cron: '35 * * * *'  # segunda pasada a las :35 UTC (2 veces por hora = cada 30 min)
+  push:
+    branches: [main]       # también se lanza en cada push nuestro
+    paths-ignore:
+      - 'index.html'       # evita el bucle (el workflow hace push de index.html)
   workflow_dispatch:        # lanzamiento manual desde GitHub
 
 jobs:
