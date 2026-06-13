@@ -71,6 +71,19 @@ if os.path.exists(_elo_path):
     RBAR = float(np.mean([R0[t] for t in TEAMS]))   # recalcular con ratings vivos
     print(f"Ratings en vivo: {len(_elo_live['applied'])} partidos aplicados a R0")
 
+# calibracion Bayesiana online: ajustes de ataque/defensa aprendidos de goles WC 2026
+_WC26_BASE_FACTOR = 1.0
+_live_adj_path = os.path.join(HERE, "wc_live_adj.json")
+if os.path.exists(_live_adj_path):
+    with open(_live_adj_path, encoding="utf-8") as _f:
+        _la = json.load(_f)
+    _WC26_BASE_FACTOR = _la.get("base_factor", 1.0)
+    for _t, _d in _la.get("att_delta", {}).items():
+        ATT_ADJ[_t] = ATT_ADJ.get(_t, 0.0) + _d
+    for _t, _d in _la.get("def_delta", {}).items():
+        DEF_ADJ[_t] = DEF_ADJ.get(_t, 0.0) + _d
+    print(f"Calibracion WC26: {_la['n_matches']} partidos | base x{_WC26_BASE_FACTOR:.3f}")
+
 def R(t): return R0[t] + HOST_BOOST.get(t, 0)
 
 def lambdas(a, b, c):
@@ -79,7 +92,8 @@ def lambdas(a, b, c):
     con ATT_ADJ/DEF_ADJ (a mano o por MLE)."""
     att_a = (R(a)-RBAR)*c/2 + ATT_ADJ[a]; dfn_a = (R(a)-RBAR)*c/2 + DEF_ADJ[a]
     att_b = (R(b)-RBAR)*c/2 + ATT_ADJ[b]; dfn_b = (R(b)-RBAR)*c/2 + DEF_ADJ[b]
-    la = BASE*math.exp(att_a - dfn_b); lb = BASE*math.exp(att_b - dfn_a)
+    la = BASE*_WC26_BASE_FACTOR*math.exp(att_a - dfn_b)
+    lb = BASE*_WC26_BASE_FACTOR*math.exp(att_b - dfn_a)
     return max(0.15, min(4.5, la)), max(0.15, min(4.5, lb))
 
 def build_matrix(a, b, c):

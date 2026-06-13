@@ -91,7 +91,7 @@ def fetch_results():
                     "gh": ft["home"], "ga": ft["away"], "stage": m["stage"]})
     return out
 
-ODDS_FRESH_SECS = 3 * 3600  # rellamar la API solo si el archivo tiene >3h de antiguedad
+ODDS_FRESH_SECS = 1 * 3600  # rellamar la API si el archivo tiene >1h (pipeline cada 15min)
 
 def _is_fresh(path):
     return os.path.exists(path) and time.time() - os.path.getmtime(path) < ODDS_FRESH_SECS

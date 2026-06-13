@@ -17,8 +17,9 @@ def run(script):
 
 if __name__ == "__main__":
     print(f"Pipeline polla — {datetime.datetime.now():%Y-%m-%d %H:%M}")
-    run("wc_data_feed.py")   # descarga resultados -> actualiza elo_live.json
-    run("wc_model_v3.py")   # importa elo_live.json automaticamente (R0 vivo)
+    run("wc_data_feed.py")       # descarga resultados -> actualiza elo_live.json
+    run("wc_live_calibrate.py")  # Bayesian update ATT/DEF/BASE desde goles WC2026
+    run("wc_model_v3.py")        # carga elo_live + wc_live_adj automaticamente
     run("advance_strategy.py")
     run("wc_pool_strategy.py")
     # picks reales de tu grupo desde pollamundial.org (privado, local)
