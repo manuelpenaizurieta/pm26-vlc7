@@ -1,0 +1,22 @@
+{
+ "Mexico|South Africa": {
+  "espn_id": "760415",
+  "home": "Mexico",
+  "away": "South Africa"
+ },
+ "Czechia|South Korea": {
+  "espn_id": "760414",
+  "home": "South Korea",
+  "away": "Czechia"
+ },
+ "Bosnia-Herzegovina|Canada": {
+  "espn_id": "760416",
+  "home": "Canada",
+  "away": "Bosnia-Herzegovina"
+ },
+ "Paraguay|United States": {
+  "espn_id": "760417",
+  "home": "United States",
+  "away": "Paraguay"
+ }
+}

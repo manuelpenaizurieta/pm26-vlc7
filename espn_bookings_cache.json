@@ -1,0 +1,114 @@
+{
+ "760415": {
+  "Mexico": [
+   {
+    "name": "César Montes",
+    "yc": 0,
+    "rc": 1
+   },
+   {
+    "name": "Brian Gutiérrez",
+    "yc": 1,
+    "rc": 0
+   }
+  ],
+  "Sudafrica": [
+   {
+    "name": "Nkosinathi Sibisi",
+    "yc": 1,
+    "rc": 0
+   },
+   {
+    "name": "Sphephelo Sithole",
+    "yc": 0,
+    "rc": 1
+   },
+   {
+    "name": "Teboho Mokoena",
+    "yc": 1,
+    "rc": 0
+   },
+   {
+    "name": "Themba Zwane",
+    "yc": 0,
+    "rc": 1
+   }
+  ]
+ },
+ "760414": {
+  "CoreaSur": [
+   {
+    "name": "Lee Gi-Hyuk",
+    "yc": 1,
+    "rc": 0
+   }
+  ]
+ },
+ "760416": {
+  "Canada": [
+   {
+    "name": "Luc de Fougerolles",
+    "yc": 1,
+    "rc": 0
+   },
+   {
+    "name": "Alistair Johnston",
+    "yc": 1,
+    "rc": 0
+   }
+  ],
+  "Bosnia": [
+   {
+    "name": "Nikola Katic",
+    "yc": 1,
+    "rc": 0
+   },
+   {
+    "name": "Jovo Lukic",
+    "yc": 1,
+    "rc": 0
+   },
+   {
+    "name": "Ermedin Demirovic",
+    "yc": 1,
+    "rc": 0
+   }
+  ]
+ },
+ "760417": {
+  "EEUU": [
+   {
+    "name": "Tyler Adams",
+    "yc": 1,
+    "rc": 0
+   }
+  ],
+  "Paraguay": [
+   {
+    "name": "Júnior Alonso",
+    "yc": 1,
+    "rc": 0
+   },
+   {
+    "name": "Juan Jose Cáceres",
+    "yc": 1,
+    "rc": 0
+   },
+   {
+    "name": "Miguel Almirón",
+    "yc": 1,
+    "rc": 0
+   },
+   {
+    "name": "Diego Gómez",
+    "yc": 1,
+    "rc": 0
+   },
+   {
+    "name": "Alex Arce",
+    "yc": 1,
+    "rc": 0
+   }
+  ]
+ }
+}

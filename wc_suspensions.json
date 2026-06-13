@@ -1,0 +1,64 @@
+{
+ "Sudafrica": {
+  "n_susp": 2,
+  "players": [
+   "Sphephelo Sithole",
+   "Themba Zwane"
+  ],
+  "yellows_acc": {
+   "Nkosinathi Sibisi": 1,
+   "Teboho Mokoena": 1
+  }
+ },
+ "Canada": {
+  "n_susp": 0,
+  "players": [],
+  "yellows_acc": {
+   "Luc de Fougerolles": 1,
+   "Alistair Johnston": 1
+  }
+ },
+ "Mexico": {
+  "n_susp": 1,
+  "players": [
+   "César Montes"
+  ],
+  "yellows_acc": {
+   "Brian Gutiérrez": 1
+  }
+ },
+ "Bosnia": {
+  "n_susp": 0,
+  "players": [],
+  "yellows_acc": {
+   "Nikola Katic": 1,
+   "Jovo Lukic": 1,
+   "Ermedin Demirovic": 1
+  }
+ },
+ "Paraguay": {
+  "n_susp": 0,
+  "players": [],
+  "yellows_acc": {
+   "Júnior Alonso": 1,
+   "Juan Jose Cáceres": 1,
+   "Miguel Almirón": 1,
+   "Diego Gómez": 1,
+   "Alex Arce": 1
+  }
+ },
+ "CoreaSur": {
+  "n_susp": 0,
+  "players": [],
+  "yellows_acc": {
+   "Lee Gi-Hyuk": 1
+  }
+ },
+ "EEUU": {
+  "n_susp": 0,
+  "players": [],
+  "yellows_acc": {
+   "Tyler Adams": 1
+  }
+ }
+}

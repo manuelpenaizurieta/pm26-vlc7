@@ -1,0 +1,20 @@
+{
+ "n_matches": 4,
+ "base_factor": 1.0736,
+ "att_delta": {
+  "Mexico": 0.0388,
+  "Sudafrica": -0.1178,
+  "CoreaSur": 0.0124,
+  "Chequia": -0.0433,
+  "EEUU": 0.1415,
+  "Paraguay": -0.0195
+ },
+ "def_delta": {
+  "Mexico": -0.1178,
+  "Sudafrica": 0.0388,
+  "CoreaSur": -0.0433,
+  "Chequia": 0.0124,
+  "EEUU": -0.0195,
+  "Paraguay": 0.1415
+ }
+}
