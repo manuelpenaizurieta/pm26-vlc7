@@ -171,7 +171,11 @@ def analyze(home, away):
     return {"ph": round(100*pH, 1), "pd": round(100*pD, 1), "pa": round(100*pA, 1),
             "bx": bxp, "by": byp, "evb": round(evB+uqB, 2),
             "ax": axp, "ay": ayp, "eva": round(evA, 2), "mkt": mkt, "g6": g6, "p6": p6,
-            "pex": round(100*float(mat[bxp, byp]), 1), "signals": signals}
+            "pex": round(100*float(mat[bxp, byp]), 1), "signals": signals,
+            "la_h": round(la0, 3), "la_a": round(lb0, 3),
+            "la_h_adj": round(la0_adj, 3), "la_a_adj": round(lb0_adj, 3),
+            "ph_mult": round(ph_mult, 3), "pa_mult": round(pa_mult, 3),
+            "card_pen_h": round(card_pen_h, 3), "card_pen_a": round(card_pen_a, 3)}
 
 # resultados reales bajados por wc_data_feed.py (football-data.org)
 RES = {}
@@ -287,6 +291,17 @@ th{cursor:pointer;color:var(--mut);font-weight:600;font-size:12px}
 td:first-child,th:first-child{text-align:left}
 .tag{display:inline-block;background:#EEEDFE;color:#3C3489;border-radius:6px;padding:1px 7px;font-size:12px;margin-left:6px}
 .note{font-size:13px;color:var(--mut)}
+.sigs{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.sig{font-size:11px;padding:2px 8px;border-radius:999px;font-weight:500;white-space:nowrap}
+.sig-red{background:#FCEBEB;color:#A32D2D}
+.sig-yellow{background:#FAEEDA;color:#633806}
+.sig-orange{background:#FAEEDA;color:#854F0B}
+.sig-green{background:#EAF3DE;color:#3B6D11}
+.sig-blue{background:#E6F1FB;color:#185FA5}
+.sig-sharp{background:#EEEDFE;color:#534AB7}
+.sig-gray{background:#F1EFE8;color:#5F5E5A}
+.lam{font-size:12px;color:var(--mut);margin-top:3px}
+.lam b{color:var(--txt)}
 .tot{font-size:15px;font-weight:600}
 select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:14px;background:var(--card)}
 @media(max-width:560px){.mx{grid-template-columns:48px 1fr;gap:8px}.mx>.right{grid-column:1/3;justify-self:end;margin-top:4px}
@@ -316,6 +331,7 @@ select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:
 <div class="card"><b>2 · Tu posición en la polla</b> <span class="note">(se actualiza automáticamente con los resultados oficiales)</span>
 <div id="posbox" style="margin-top:6px"></div>
 <div id="rec" class="note" style="margin-top:8px"></div></div>
+__ANALYSIS_TODAY__
 <div class="card"><b>3 · Qué hace el sistema cada 15 minutos (sin que toques nada)</b>
 <ul style="margin:8px 0 6px;padding-left:20px;font-size:14px;line-height:1.9">
 <li>📊 Descarga cuotas <b>1X2 + O/U + Asian Handicap</b> (~23 casas) y detecta movimiento sharp</li>
@@ -427,13 +443,39 @@ function render(){
    var p="";
    if(val){ var r=val.split("-"); var got=pts(m.bx,m.by,+r[0],+r[1]); total+=got; nres++;
     p=got+" pts"+((api&&!store[key])?" · auto":""); }
-   var sigStr=(m.signals&&m.signals.length)?' · '+m.signals.join(' · '):'';
+   // badges de señales con colores semanticos
+   var sigHtml='';
+   if(m.signals&&m.signals.length){
+    var badges=m.signals.map(function(s){
+     var c=s.indexOf('suspendido')>=0?'sig-red':
+           s.indexOf('riesgo')>=0?'sig-yellow':
+           s.indexOf('presion')>=0?'sig-orange':
+           s.indexOf('clasificado')>=0?'sig-green':
+           s.indexOf('O/U')>=0||s.indexOf('AH ')>=0?'sig-blue':
+           s.indexOf('SHARP')>=0?'sig-sharp':'sig-gray';
+     return '<span class="sig '+c+'">'+esc(s)+'</span>';
+    });
+    sigHtml='<div class="sigs">'+badges.join('')+'</div>';
+   }
+   // linea de lambdas ajustadas (solo si hay ajuste real)
+   var lamHtml='';
+   if(m.la_h!==undefined){
+    var pctH=Math.round((m.la_h_adj/m.la_h-1)*100);
+    var pctA=Math.round((m.la_a_adj/m.la_a-1)*100);
+    var fmtH=(pctH>0?'+':'')+pctH+'%';
+    var fmtA=(pctA>0?'+':'')+pctA+'%';
+    var lamParts=[];
+    if(pctH!==0) lamParts.push('λ '+esc(m.home)+' '+fmtH+' ('+m.la_h_adj.toFixed(2)+')');
+    if(pctA!==0) lamParts.push('λ '+esc(m.away)+' '+fmtA+' ('+m.la_a_adj.toFixed(2)+')');
+    if(lamParts.length) lamHtml='<div class="lam">'+lamParts.join(' · ')+'</div>';
+   }
    row.innerHTML='<div class="t">'+m.time+'<br>['+m.g+']</div>'
     +'<div><span class="tm">'+esc(m.home)+' – '+esc(m.away)+'</span> '
     +'<span class="pick">'+m.bx+'-'+m.by+'</span> <span class="alt">(EV '+m.evb.toFixed(2)+' pts · P(exacto) '+m.pex+'%'+(m.bx!==m.ax||m.by!==m.ay?' · alternativa '+m.ax+'-'+m.ay:'')+' )</span>'
     +(isClose(m)?'<span class="risk">⚖ parejo</span>':'')
     +'<div class="bar"><i style="width:'+m.ph+'%;background:#1D9E75"></i><i style="width:'+m.pd+'%;background:#B4B2A9"></i><i style="width:'+m.pa+'%;background:#D85A30"></i></div>'
-    +'<div class="t">'+m.ph+'% / '+m.pd+'% / '+m.pa+'%'+(m.mkt?' · mercado (O/U+AH+1X2)':'')+sigStr+' · '+esc(m.venue)+'</div></div>'
+    +'<div class="t">'+m.ph+'% / '+m.pd+'% / '+m.pa+'%'+(m.mkt?' · mercado (O/U+AH+1X2)':'')+'  '+esc(m.venue)+'</div>'
+    +sigHtml+lamHtml+'</div>'
     +'<div class="right"><input class="res" placeholder="res" value="'+val+'"> <span class="ptsb">'+p+'</span></div>';
    var inp=row.querySelector("input");
    inp.addEventListener("change",function(){
@@ -689,21 +731,166 @@ function triggerUpdate(){
 }
 </script></body></html>"""
 
+def analysis_today_html(matches_data):
+    """Genera el HTML de la sección '2b · Análisis del modelo para los partidos de hoy/mañana'."""
+    import datetime as _dt
+    today = _dt.date.today()
+    tomorrow = today + _dt.timedelta(days=1)
+    window = {today.isoformat(), tomorrow.isoformat()}
+    relevant = [m for m in matches_data if m.get("date", "") in window]
+    if not relevant:
+        return ""
+
+    rows_html = ""
+    for m in relevant:
+        home, away = m["home"], m["away"]
+        date_label = "HOY" if m.get("date", "") == today.isoformat() else "MAÑANA"
+
+        # encabezado del partido
+        rows_html += (
+            f'<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)">'
+            f'<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">'
+            f'<b style="font-size:15px">{home} – {away}</b>'
+            f'<span class="note">{date_label} {m.get("time","")}</span>'
+            f'<span class="pick">{m["bx"]}-{m["by"]}</span>'
+            f'<span class="note">EV {m["evb"]:.2f} · P(exacto) {m["pex"]}%</span>'
+            f'</div>'
+        )
+
+        # tabla de factores aplicados
+        rows_html += '<table style="width:100%;font-size:13px;margin-top:6px;min-width:0"><tbody>'
+
+        # lambdas base y ajustadas
+        la_h = m.get("la_h", 0); la_a = m.get("la_a", 0)
+        la_ha = m.get("la_h_adj", la_h); la_aa = m.get("la_a_adj", la_a)
+        pct_h = round((la_ha / la_h - 1) * 100) if la_h else 0
+        pct_a = round((la_aa / la_a - 1) * 100) if la_a else 0
+        sign_h = "+" if pct_h >= 0 else ""
+        sign_a = "+" if pct_a >= 0 else ""
+        rows_html += (
+            f'<tr><td style="color:var(--mut);padding:2px 8px 2px 0">λ esperados</td>'
+            f'<td>{home}: <b>{la_h:.2f}</b> → <b>{la_ha:.2f}</b> ({sign_h}{pct_h}%)'
+            f' · {away}: <b>{la_a:.2f}</b> → <b>{la_aa:.2f}</b> ({sign_a}{pct_a}%)</td></tr>'
+        )
+
+        # probabilidades resultado
+        rows_html += (
+            f'<tr><td style="color:var(--mut);padding:2px 8px 2px 0">Probabilidades</td>'
+            f'<td>Local {m["ph"]}% · Empate {m["pd"]}% · Visita {m["pa"]}%'
+            f'{"  · <i>mercado 1X2+O/U+AH</i>" if m.get("mkt") else "  · <i>modelo base</i>"}</td></tr>'
+        )
+
+        # signals: suspensiones, presión, O/U, AH, sharp
+        sigs = m.get("signals", [])
+        susp  = [s for s in sigs if "suspendido" in s or "riesgo" in s or "lesionado" in s]
+        press = [s for s in sigs if "presion" in s or "clasificado" in s]
+        mkt_s = [s for s in sigs if "O/U" in s or "AH " in s or "SHARP" in s]
+
+        if susp:
+            badges = "".join(
+                f'<span class="sig {"sig-red" if "suspendido" in s or "lesionado" in s else "sig-yellow"}">{s}</span>'
+                for s in susp
+            )
+            rows_html += (
+                f'<tr><td style="color:var(--mut);padding:2px 8px 2px 0">Tarjetas</td>'
+                f'<td><div class="sigs">{badges}</div></td></tr>'
+            )
+
+        if press:
+            badges = "".join(
+                f'<span class="sig {"sig-orange" if "presion" in s else "sig-green"}">{s}</span>'
+                for s in press
+            )
+            rows_html += (
+                f'<tr><td style="color:var(--mut);padding:2px 8px 2px 0">Standings</td>'
+                f'<td><div class="sigs">{badges}</div></td></tr>'
+            )
+
+        if mkt_s:
+            badges = "".join(
+                f'<span class="sig {"sig-sharp" if "SHARP" in s else "sig-blue"}">{s}</span>'
+                for s in mkt_s
+            )
+            rows_html += (
+                f'<tr><td style="color:var(--mut);padding:2px 8px 2px 0">Mercado</td>'
+                f'<td><div class="sigs">{badges}</div></td></tr>'
+            )
+
+        rows_html += '</tbody></table></div>'
+
+    if not rows_html:
+        return ""
+
+    return (
+        '<div class="card"><b>2b · Análisis del modelo para hoy y mañana</b>'
+        '<span class="note"> — factores aplicados en cada pick</span>'
+        + rows_html + '</div>'
+    )
+
+
 def setup_items():
+    import time as _time
     def li(ok, txt_ok, txt_falta):
         mark = "✅" if ok else "⬜"
         return f"<li>{mark} {txt_ok if ok else txt_falta}</li>"
+    def age_str(path):
+        if not os.path.exists(path): return ""
+        mins = (_time.time() - os.path.getmtime(path)) / 60
+        if mins < 90: return f" <span class='note'>({mins:.0f} min)</span>"
+        return f" <span class='note'>({mins/60:.1f} h)</span>"
     from wc_data_feed import user_env
+    p_ext  = os.path.join(HERE, "match_odds_ext.json")
+    p_mov  = os.path.join(HERE, "odds_movement.json")
+    p_susp = os.path.join(HERE, "wc_suspensions.json")
+    p_elo  = os.path.join(HERE, "elo_live.json")
+    p_adj  = os.path.join(HERE, "wc_live_adj.json")
+    p_sty  = os.path.join(HERE, "style_adj.json")
+
+    has_ext = os.path.exists(p_ext)
+    has_mov = os.path.exists(p_mov)
+    has_susp = os.path.exists(p_susp)
+
+    # cuenta suspendidos activos
+    n_susp = 0
+    susp_teams = []
+    if has_susp:
+        try:
+            sd = json.load(open(p_susp, encoding="utf-8"))
+            for team, d in sd.items():
+                if d.get("n_susp", 0) > 0:
+                    n_susp += d["n_susp"]
+                    susp_teams.append(f"{team} ({d['n_susp']})")
+        except Exception: pass
+
     items = [
         li(bool(user_env("FOOTBALL_DATA_TOKEN")),
-           "Resultados automáticos conectados (football-data.org)",
-           "<b>Falta:</b> token de football-data.org — sin esto los resultados se meten a mano"),
+           "Resultados automáticos conectados (football-data.org)" + age_str(p_elo),
+           "<b>Falta:</b> token de football-data.org — resultados a mano"),
+        li(os.path.exists(p_elo),
+           "Elo en vivo activo (K=40 grupos)" + age_str(p_elo),
+           "Elo en vivo: se activa con los primeros resultados"),
+        li(os.path.exists(p_adj),
+           "Calibración Bayesiana WC2026 activa (ATT/DEF/BASE online)" + age_str(p_adj),
+           "Calibración online: pendiente de resultados"),
         li(bool(user_env("ODDS_API_KEY")),
-           "Cuotas de 48 equipos conectadas (devig Shin activo)",
-           "<b>Falta:</b> clave de the-odds-api.com — sin esto la calibración usa solo 6 cuotas"),
-        li(os.path.exists(os.path.join(HERE, "elo_live.json")),
-           "Elo en vivo activo (se ajusta con cada resultado)",
-           "Elo en vivo: se activará solo cuando entren los primeros resultados"),
+           "Cuotas 1X2 conectadas (~23 casas, devig Shin activo)",
+           "<b>Falta:</b> clave de the-odds-api.com"),
+        li(has_ext,
+           "O/U + Asian Handicap activos (4 constraints → λ casi únicos)" + age_str(p_ext),
+           "O/U + AH: pendiente (se genera en la próxima bajada de cuotas)"),
+        li(has_mov,
+           "Detección de línea sharp activa" + age_str(p_mov),
+           "Movimiento sharp: pendiente (requiere 2 snapshots de odds)"),
+        li(has_susp,
+           (f"Tarjetas/suspensiones ESPN activas — {n_susp} suspendido(s): {', '.join(susp_teams)}" if n_susp
+            else "Tarjetas/suspensiones ESPN activas — sin suspendidos ahora") + age_str(p_susp),
+           "Tarjetas/suspensiones: se activan en la próxima ejecución"),
+        li(_SC is not None,
+           "Presión de grupo activa (standings context — mult por jornada/pts)",
+           "Standings context: módulo no encontrado"),
+        li(os.path.exists(p_sty),
+           "Estilos MLE activos (ATT/DEF histórico 4 años)" + age_str(p_sty),
+           "Estilos MLE: ejecutar fit_ratings.py"),
     ]
     return "".join(items)
 
@@ -738,7 +925,8 @@ html = (HTML.replace("__GEN__", _now_cest.strftime("%d %b %Y %H:%M") + " (Valenc
             .replace("__ADV__", json.dumps(ADV, ensure_ascii=False))
             .replace("__DIFF__", json.dumps(ADV.get("differentiators", []), ensure_ascii=False))
             .replace("__STANDINGS__", json.dumps(STANDINGS, ensure_ascii=False))
-            .replace("__SETUP__", setup_items()))
+            .replace("__SETUP__", setup_items())
+            .replace("__ANALYSIS_TODAY__", analysis_today_html(matches)))
 # picks finales (para la auto-apuesta): "Home|Away" -> [bx, by]
 with open(os.path.join(HERE, "picks.json"), "w", encoding="utf-8") as f:
     json.dump({f"{m['home']}|{m['away']}": [m["bx"], m["by"]] for m in matches}, f, ensure_ascii=False, indent=1)
