@@ -70,14 +70,16 @@ def analyze(home, away):
             cand.append((ev, uniq, px, py))
     evA, _, axp, ayp = max(cand, key=lambda t: t[0])
     evB, uqB, bxp, byp = max(cand, key=lambda t: t[0]+t[1])
-    # rejilla de puntos esperados BASE (sin bono unico) por marcador 0..5,
-    # para que el navegador recalcule el pick optimo dado lo que puso tu grupo
+    # rejilla EV base y P(exacto) por marcador 0..5 para recalcular con picks reales del grupo
     g6 = [[round(sum(mat[ax, ay]*S.pts(px, py, ax, ay)
                      for ax in range(M.MAXG+1) for ay in range(M.MAXG+1)), 3)
            for py in range(6)] for px in range(6)]
+    p6 = [[round(float(mat[min(px, M.MAXG), min(py, M.MAXG)]), 4)
+           for py in range(6)] for px in range(6)]
     return {"ph": round(100*pH, 1), "pd": round(100*pD, 1), "pa": round(100*pA, 1),
             "bx": bxp, "by": byp, "evb": round(evB+uqB, 2),
-            "ax": axp, "ay": ayp, "eva": round(evA, 2), "mkt": mkt, "g6": g6}
+            "ax": axp, "ay": ayp, "eva": round(evA, 2), "mkt": mkt, "g6": g6, "p6": p6,
+            "pex": round(100*float(mat[bxp, byp]), 1)}
 
 # resultados reales bajados por wc_data_feed.py (football-data.org)
 RES = {}
@@ -106,11 +108,12 @@ except FileNotFoundError:
     pass
 
 def group_optimal(a, taken):
-    """Mejor marcador = max( EV base + 2 si tu grupo NO lo tiene )."""
-    g6 = a["g6"]; best = None
+    """Mejor marcador = max( EV base + P(exacto)*2 si tu grupo NO lo tiene )."""
+    g6 = a["g6"]; p6 = a.get("p6", [[0]*6 for _ in range(6)]); best = None
     for px in range(6):
         for py in range(6):
-            tot = g6[px][py] + (0 if f"{px}-{py}" in taken else 2)
+            uniq_bonus = 0 if f"{px}-{py}" in taken else p6[px][py] * 2
+            tot = g6[px][py] + uniq_bonus
             if best is None or tot > best[0]: best = (tot, px, py)
     return best[1], best[2]
 
@@ -204,7 +207,7 @@ select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:
 #updateBtn:disabled{opacity:.5;cursor:default}
 </style></head><body>
 <div class="hero"><header><h1>⚽ Polla Mundial 2026 <span class="tag">modelo v4</span></h1>
-<p class="sub">Generado __GEN__ · bracket oficial 2026 · calibrado a 48 cuotas reales (devig Shin, c=__C__) · picks = política B (EV + bono unicidad)</p>
+<p class="sub">Generado __GEN__ · bracket oficial 2026 · calibrado a 48 cuotas reales (devig Shin, c=__C__) · picks = max EV (exactos + parciales + unicidad real)</p>
 <button id="updateBtn" onclick="triggerUpdate()">Actualizar ahora</button></header>
 <div class="stats">
 <div class="stat"><b>__D_FINAL__</b><span>días para la final</span></div>
@@ -251,14 +254,13 @@ select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:
 <div style="position:relative;height:300px;margin-bottom:14px"><canvas id="champChart"></canvas></div>
 <div class="tablewrap"><table id="pt"><thead><tr><th data-k="team">Equipo</th><th data-k="R32">R32</th><th data-k="R16">Octavos</th><th data-k="QF">Cuartos</th><th data-k="SF">Semis</th><th data-k="FINAL">Final</th><th data-k="CAMPEON">Campeón</th></tr></thead><tbody></tbody></table></div></div></main>
 <main id="strat"><div class="card">
-<p><b>La regla que lo cambia todo:</b> la predicción única (+2 por marcador que nadie más puso). Con ~10 jugadores, poner un marcador raro pero direccional (3-0 del favorito en vez de 1-0) pierde ~1 punto esperado de marcador y gana ~1,9 de bono casi seguro. En 72 partidos son ~+70 puntos sobre quien juega los marcadores típicos.</p>
-<p><b>Simulación</b> (1.500 pollas, 9 rivales sintéticos): EV-max puro gana el 7,7% de las veces; la política B (EV+unicidad) el 93,2%.</p>
-<p><b>Regla adaptativa</b> (puedes cambiar de marcha partido a partido):</p>
-<ul><li>Vas a &lt;8 pts del líder → política B (no regales EV).</li>
-<li>Vas a 8–20 pts → contrarian también en los partidos parejos (lado que nadie pisa).</li>
-<li>Vas a &gt;20 pts → flipea el GANADOR en los 3–4 partidos más parejos restantes (máxima varianza: el 70% es del 1º).</li></ul>
-<p><b>Bonos de avance</b>: están en la pestaña "Quién avanza" (tus 32 ya elegidos por probabilidad). Valen hasta 320 pts en conjunto: más que todos los marcadores. Ahí es donde de verdad se gana.</p>
-<p class="note">Riesgo conocido: si un rival usa el mismo truco de unicidad, ambos seguís cobrando el bono (marcadores distintos siguen siendo únicos); la ventaja se reduce pero no se vuelve en contra.</p></div></main>
+<p><b>La clave: marcadores exactos.</b> Acertar el marcador exacto da 5 pts — más que ganar ganador+ambos goles (2+1+1). El modelo elige el pick con mayor EV combinando exacto, parciales y un pequeño bono de unicidad. Los marcadores más frecuentes en grupos del Mundial son 1-0, 2-0, 2-1 y 1-1 — el modelo ya los prioriza.</p>
+<p><b>Bono unicidad (+2):</b> se cobra SOLO si aciertas el marcador exacto Y eres el único que lo puso. El valor esperado real es ~0,1–0,2 pts por partido — útil al margen, pero nunca vale sacrificar un marcador probable por uno raro. El modelo lo pondera correctamente.</p>
+<p><b>Donde se gana de verdad:</b> los bonos de avance (hasta 320 pts totales) valen más que todos los marcadores de grupos juntos. Predice los 32 clasificados por <b>probabilidad real</b> en la pestaña "Quién avanza", no por fama o intuición.</p>
+<p><b>Regla adaptativa:</b></p>
+<ul><li>A &lt;8 pts del líder → sigue con los picks del modelo, no cambies nada.</li>
+<li>A 8–20 pts → en partidos parejos elige el marcador menos popular en tu grupo (unicidad real, no estimada).</li>
+<li>A &gt;20 pts → flipea el GANADOR en los 3–4 partidos más parejos que quedan (máxima varianza: el 70% de la ventaja es del líder, necesitas sorprender).</li></ul></div></main>
 <main id="rules"><div class="card"><table><tbody>
 <tr><td>Marcador exacto</td><td>5</td></tr><tr><td>Ganador o empate acertado</td><td>2</td></tr>
 <tr><td>Gol acertado (por equipo)</td><td>1</td></tr><tr><td>Predicción única</td><td>2</td></tr>
@@ -320,7 +322,7 @@ function render(){
     p=got+" pts"+((api&&!store[key])?" · auto":""); }
    row.innerHTML='<div class="t">'+m.time+'<br>['+m.g+']</div>'
     +'<div><span class="tm">'+esc(m.home)+' – '+esc(m.away)+'</span> '
-    +'<span class="pick">'+m.bx+'-'+m.by+'</span> <span class="alt">(EV '+m.evb.toFixed(2)+' pts; el típico '+m.ax+'-'+m.ay+' daría '+m.eva.toFixed(2)+')</span>'
+    +'<span class="pick">'+m.bx+'-'+m.by+'</span> <span class="alt">(EV '+m.evb.toFixed(2)+' pts · P(exacto) '+m.pex+'%'+(m.bx!==m.ax||m.by!==m.ay?' · alternativa '+m.ax+'-'+m.ay:'')+' )</span>'
     +(isClose(m)?'<span class="risk">⚖ parejo</span>':'')
     +'<div class="bar"><i style="width:'+m.ph+'%;background:#1D9E75"></i><i style="width:'+m.pd+'%;background:#B4B2A9"></i><i style="width:'+m.pa+'%;background:#D85A30"></i></div>'
     +'<div class="t">'+m.ph+'% / '+m.pd+'% / '+m.pa+'%'+(m.mkt?' · 📈 prob. de mercado (23 casas)':'')+' · '+esc(m.venue)+'</div></div>'
@@ -371,19 +373,20 @@ function optimalWithGroup(m, gtxt){
  var taken=parseGroup(gtxt); var hasGroup=Object.keys(taken).length>0;
  // sin datos del grupo: pick del sistema (politica B, con unicidad estimada)
  if(!hasGroup||!m.g6){
-  var n=m.auto?"✅ ajustado a tu grupo (automático) · único":"+"+(m.evb-m.eva).toFixed(1)+" pts vs el típico ("+m.ax+"-"+m.ay+")";
+  var n=m.auto?"✅ ajustado a tu grupo (automático) · P(exacto) "+m.pex+"%":"P(exacto) "+m.pex+"%"+(m.bx!==m.ax||m.by!==m.ay?" · alternativa "+m.ax+"-"+m.ay:"");
   return {px:m.bx, py:m.by, note:n};
  }
- // con datos del grupo: bono unico EXACTO -> el mejor marcador que el grupo NO tiene
+ // con datos del grupo: bono unico correcto = P(exacto)*2 si nadie mas lo tiene
  var best=null;
  for(var px=0;px<6;px++) for(var py=0;py<6;py++){
-  var total=m.g6[px][py]+(!taken[px+"-"+py]?2:0);
+  var pex_cell=(m.p6&&m.p6[px]&&m.p6[px][py]!=null)?m.p6[px][py]:0;
+  var total=m.g6[px][py]+(!taken[px+"-"+py]?pex_cell*2:0);
   if(!best||total>best.total) best={px:px,py:py,total:total};
  }
- var ta; var nT=Object.keys(taken).length;
+ var nT=Object.keys(taken).length;
  var note=taken[best.px+"-"+best.py]
-  ? "tu grupo ya lo tiene; aun así es el de más puntos"
-  : "✓ único en tu grupo · "+nT+" marcador"+(nT>1?"es":"")+" suyos descartados";
+  ? "tu grupo ya lo tiene; aun así es el de más EV"
+  : "unico en tu grupo (P exacto "+(((m.p6&&m.p6[best.px]&&m.p6[best.px][best.py])||0)*100).toFixed(1)+"%) · "+nT+" pick"+(nT>1?"s":"")+" suyos descartados";
  return {px:best.px, py:best.py, note:note};
 }
 function renderHoy(){
@@ -444,10 +447,10 @@ function renderHoy(){
   var mi=me.pts, li=lead.pts;
   box.innerHTML="Vas <b>"+me.pos+"º</b> de "+STANDINGS.length+" · <b>"+mi+" pts</b> · líder ("+esc(lead.name)+") "+li+" pts";
   var d=li-mi;
-  if(d<=0){ out.innerHTML="<b style='color:var(--ok)'>Vas LÍDER (+"+(-d)+").</b> Sigue con los picks tal cual (política B). No arriesgues más de lo que ya arriesga el sistema."; }
-  else if(d<8){ out.innerHTML="<b>A "+d+" pts del líder.</b> Sigue con los picks tal cual (política B). Es ruido, no cambies nada."; }
-  else if(d<=20){ out.innerHTML="<b style='color:var(--warn)'>A "+d+" pts.</b> Marcha C: en los partidos PAREJOS que vienen, pon el marcador del lado que nadie pisa (te los marco abajo)."+flips(2); }
-  else { out.innerHTML="<b style='color:#A32D2D'>A "+d+" pts: hay que arriesgar.</b> Flipea el GANADOR en los partidos más parejos que quedan (el 70% es del 1º, el 2º-3º premio es consolación):"+flips(4); }
+  if(d<=0){ out.innerHTML="<b style='color:var(--ok)'>Vas LÍDER (+"+(-d)+").</b> Sigue con los picks del modelo. No arriesgues: el sistema ya optimiza exactos y unicidad."; }
+  else if(d<8){ out.innerHTML="<b>A "+d+" pts del líder.</b> Sigue con los picks del modelo. Es ruido estadístico, no cambies nada."; }
+  else if(d<=20){ out.innerHTML="<b style='color:var(--warn)'>A "+d+" pts.</b> En los partidos PAREJOS que vienen, elige el marcador menos popular en tu grupo para cobrar el bono único:"+flips(2); }
+  else { out.innerHTML="<b style='color:#A32D2D'>A "+d+" pts: hay que arriesgar.</b> Flipea el GANADOR en los partidos más parejos que quedan (máxima varianza para remontar):"+flips(4); }
  }
  function flips(n){
   var hoy2=todayStr();
@@ -658,5 +661,6 @@ print("\nPicks de HOY y manana:")
 hoy = datetime.date.today().isoformat()
 for m in matches[:6]:
     tag = " <- HOY" if m["date"] == hoy else ""
+    alt = f" / alt {m['ax']}-{m['ay']}" if (m['ax'] != m['bx'] or m['ay'] != m['by']) else ""
     print(f"  {m['date']} {m['time']} [{m['g']}] {m['home']} {m['bx']}-{m['by']} {m['away']}"
-          f"  (seguro {m['ax']}-{m['ay']}; L{m['ph']}/X{m['pd']}/V{m['pa']}){tag}")
+          f"  (P(exacto)={m['pex']}%{alt}; L{m['ph']}/X{m['pd']}/V{m['pa']}){tag}")
