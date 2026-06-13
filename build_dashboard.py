@@ -26,6 +26,37 @@ try:
 except FileNotFoundError:
     pass
 
+# cuotas extendidas: O/U totales + spreads (Asian Handicap)
+MODDS_EXT = {}
+try:
+    with open(os.path.join(HERE, "match_odds_ext.json"), encoding="utf-8-sig") as f:
+        for o in json.load(f):
+            MODDS_EXT[(o["home"], o["away"])] = o
+except FileNotFoundError:
+    pass
+
+# movimiento de linea (dinero sharp detectado)
+MOVEMENT = {}
+try:
+    with open(os.path.join(HERE, "odds_movement.json"), encoding="utf-8") as f:
+        for o in json.load(f):
+            MOVEMENT[(o["home"], o["away"])] = o
+except FileNotFoundError:
+    pass
+
+# contexto de standings (presion por posicion en el grupo)
+try:
+    import wc_standings_context as _SC
+    _SC.reset_cache()
+except ImportError:
+    _SC = None
+
+# tarjetas y lesiones
+try:
+    import wc_cards as _WCC
+except ImportError:
+    _WCC = None
+
 def mat_from_lams(la, lb):
     x = np.arange(M.MAXG+1)
     pa_ = np.exp(-la)*la**x/M.FACT; pb_ = np.exp(-lb)*lb**x/M.FACT
@@ -34,31 +65,80 @@ def mat_from_lams(la, lb):
     mat[1,0] *= 1+lb*M.RHO; mat[1,1] *= 1-M.RHO
     return mat/mat.sum()
 
-def market_matrix(la0, lb0, tH, tA):
-    """Ajusta (lambda_local, lambda_visit) para que la matriz Dixon-Coles
-    reproduzca las probabilidades 1X2 del mercado (devig proporcional)."""
+def market_matrix(la0, lb0, tH, tA, ou_data=None, ah_data=None):
+    """Ajusta (lambda_local, lambda_visit) para que la matriz Dixon-Coles reproduzca
+    1X2 + O/U + AH del mercado. Con 4 constraints la solucion es casi unica."""
     from scipy.optimize import minimize
+    W_OU, W_AH = 2.0, 1.5
+    N = M.MAXG + 1
+    if ou_data:
+        ou_line = ou_data[0]
+        ou_mask = np.array([[1.0 if i+j > ou_line else 0.0 for j in range(N)] for i in range(N)])
+    if ah_data:
+        ah_line = ah_data[0]
+        # ah_line negativo = local favorito; cubre si i - j > -ah_line
+        ah_mask = np.array([[1.0 if i-j > -ah_line else 0.0 for j in range(N)] for i in range(N)])
     def loss(p):
         la, lb = max(.15, p[0]), max(.15, p[1])
         mat = mat_from_lams(la, lb)
-        return (float(np.tril(mat,-1).sum())-tH)**2 + (float(np.triu(mat,1).sum())-tA)**2
-    r = minimize(loss, [la0, lb0], method="Nelder-Mead")
+        err = (float(np.tril(mat,-1).sum())-tH)**2 + (float(np.triu(mat,1).sum())-tA)**2
+        if ou_data:
+            err += W_OU * (float((mat * ou_mask).sum()) - ou_data[1])**2
+        if ah_data:
+            err += W_AH * (float((mat * ah_mask).sum()) - ah_data[1])**2
+        return err
+    r = minimize(loss, [la0, lb0], method="Nelder-Mead",
+                 options={"xatol": 1e-5, "fatol": 1e-7, "maxiter": 2000})
     return mat_from_lams(max(.15, r.x[0]), max(.15, r.x[1]))
 
 def analyze(home, away):
+    # presion de standings
+    ph_mult = pa_mult = 1.0
+    if _SC:
+        ph_mult, pa_mult = _SC.get_lambda_mults(home, away)
+
+    # penalizacion por tarjetas/lesiones
+    card_pen_h = _WCC.get_lambda_pen(home) if _WCC else 1.0
+    card_pen_a = _WCC.get_lambda_pen(away) if _WCC else 1.0
+
+    la0, lb0 = M.lambdas(home, away, C)
+    la0_adj   = la0 * ph_mult * card_pen_h
+    lb0_adj   = lb0 * pa_mult * card_pen_a
+
     mat = M.build_matrix(home, away, C)
-    mkt = False
-    oo = MODDS.get((home, away))
-    flip = False
+    if ph_mult != 1.0 or pa_mult != 1.0 or card_pen_h != 1.0 or card_pen_a != 1.0:
+        mat = mat_from_lams(la0_adj, lb0_adj)
+
+    ou_dt = None; ah_dt = None; mov = None
+    mkt   = False
+    flip  = False
+    oo    = MODDS.get((home, away))
     if oo is None and (away, home) in MODDS:
         oo = MODDS[(away, home)]; flip = True
     if oo:
         rh, rd, ra = 1/oo[0], 1/oo[1], 1/oo[2]
         s = rh+rd+ra; tH, tA = rh/s, ra/s
         if flip: tH, tA = tA, tH
-        la0, lb0 = M.lambdas(home, away, C)
-        mat = market_matrix(la0, lb0, tH, tA)
+
+        ext = MODDS_EXT.get((home, away)) or (MODDS_EXT.get((away, home)) if flip else None)
+        if ext and "ou_line" in ext:
+            ou_dt = (ext["ou_line"], ext["p_over"])
+        if ext and "ah_line" in ext:
+            ah_line = -ext["ah_line"] if flip else ext["ah_line"]
+            p_ah    = (1 - ext["p_ah_home"]) if flip else ext["p_ah_home"]
+            ah_dt   = (ah_line, p_ah)
+
+        mov = MOVEMENT.get((home, away)) or (MOVEMENT.get((away, home)) if flip else None)
+        if mov and mov.get("sharp"):
+            boost = 0.06
+            dH = -mov["dA"] if flip else mov["dH"]
+            dA = -mov["dH"] if flip else mov["dA"]
+            la0_adj *= (1 + boost * max(-1, min(1, dH)))
+            lb0_adj *= (1 + boost * max(-1, min(1, dA)))
+
+        mat = market_matrix(la0_adj, lb0_adj, tH, tA, ou_dt, ah_dt)
         mkt = True
+
     q = S.rival_pick_dist(home, away)
     pH = float(np.tril(mat, -1).sum()); pD = float(np.trace(mat)); pA = float(np.triu(mat, 1).sum())
     cand = []
@@ -70,16 +150,28 @@ def analyze(home, away):
             cand.append((ev, uniq, px, py))
     evA, _, axp, ayp = max(cand, key=lambda t: t[0])
     evB, uqB, bxp, byp = max(cand, key=lambda t: t[0]+t[1])
-    # rejilla EV base y P(exacto) por marcador 0..5 para recalcular con picks reales del grupo
     g6 = [[round(sum(mat[ax, ay]*S.pts(px, py, ax, ay)
                      for ax in range(M.MAXG+1) for ay in range(M.MAXG+1)), 3)
            for py in range(6)] for px in range(6)]
     p6 = [[round(float(mat[min(px, M.MAXG), min(py, M.MAXG)]), 4)
            for py in range(6)] for px in range(6)]
+
+    signals = []
+    if ph_mult > 1.05: signals.append("presion " + home)
+    if ph_mult < 0.95: signals.append("clasificado " + home)
+    if pa_mult > 1.05: signals.append("presion " + away)
+    if pa_mult < 0.95: signals.append("clasificado " + away)
+    if ou_dt: signals.append("O/U " + str(ou_dt[0]) + " (" + str(round(100*ou_dt[1])) + "% over)")
+    if ah_dt: signals.append("AH " + ("+"+str(ah_dt[0]) if ah_dt[0]>=0 else str(ah_dt[0])) + " (" + str(round(100*ah_dt[1])) + "%)")
+    if mov and mov.get("sharp"): signals.append("SHARP en linea")
+    if _WCC:
+        for alert in _WCC.get_alerts(home) + _WCC.get_alerts(away):
+            signals.append(alert)
+
     return {"ph": round(100*pH, 1), "pd": round(100*pD, 1), "pa": round(100*pA, 1),
             "bx": bxp, "by": byp, "evb": round(evB+uqB, 2),
             "ax": axp, "ay": ayp, "eva": round(evA, 2), "mkt": mkt, "g6": g6, "p6": p6,
-            "pex": round(100*float(mat[bxp, byp]), 1)}
+            "pex": round(100*float(mat[bxp, byp]), 1), "signals": signals}
 
 # resultados reales bajados por wc_data_feed.py (football-data.org)
 RES = {}
@@ -226,14 +318,16 @@ select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:
 <div id="rec" class="note" style="margin-top:8px"></div></div>
 <div class="card"><b>3 · Qué hace el sistema cada 15 minutos (sin que toques nada)</b>
 <ul style="margin:8px 0 6px;padding-left:20px;font-size:14px;line-height:1.9">
-<li>📊 Calibra el modelo con <b>48 cuotas reales</b> de mercado (devig de Shin)</li>
-<li>🎲 Simula <b>30.000 Mundiales</b> (Monte Carlo, bracket oficial FIFA)</li>
-<li>👥 Inicia sesión en tu cuenta y baja los <b>picks reales de tu grupo</b></li>
-<li>🎯 Calcula tu <b>marcador único</b> óptimo (maximiza quedar 1º)</li>
-<li>🏆 Predice los <b>bonos de avance</b> (los 32 que pasan)</li>
-<li>✅ Baja <b>resultados oficiales</b> y actualiza tu <b>clasificación</b></li>
+<li>📊 Descarga cuotas <b>1X2 + O/U + Asian Handicap</b> (~23 casas) y detecta movimiento sharp</li>
+<li>🎯 Calibra lambdas con <b>4 constraints</b>: P(local) + P(visitante) + P(over) + spread → goles casi únicos</li>
+<li>🟥 Baja <b>tarjetas y suspensiones</b> (ESPN) → −10% lambda por jugador suspendido</li>
+<li>⚡ Ajusta por <b>presión de grupo</b>: 0pts en jornada 3 = +15% goles; ya clasificado = −10%</li>
+<li>🔬 <b>Calibración Bayesiana online</b>: aprende de cada gol del Mundial (ATT/DEF por equipo)</li>
+<li>🎲 Simula <b>30.000 Mundiales</b> (Monte Carlo, bracket oficial FIFA, Elo en vivo)</li>
+<li>👥 Baja los <b>picks reales de tu grupo</b> y calcula tu marcador único óptimo solo</li>
+<li>🏆 Predice los <b>bonos de avance</b> con probabilidades reales del modelo</li>
+<li>✅ Baja <b>resultados oficiales</b> y actualiza tu clasificación</li>
 <li>🤖 <b>Apuesta por ti</b> ~1h15 antes del partido y revisa hasta el cierre</li>
-<li>📱 Republica este tablero</li>
 </ul>
 <div class="note">Última actualización: <b>__GEN__</b> · estado de las conexiones:</div>
 <ul style="margin:6px 0 0;padding-left:20px;font-size:14px">__SETUP__</ul></div></main>
@@ -254,13 +348,26 @@ select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:
 <div style="position:relative;height:300px;margin-bottom:14px"><canvas id="champChart"></canvas></div>
 <div class="tablewrap"><table id="pt"><thead><tr><th data-k="team">Equipo</th><th data-k="R32">R32</th><th data-k="R16">Octavos</th><th data-k="QF">Cuartos</th><th data-k="SF">Semis</th><th data-k="FINAL">Final</th><th data-k="CAMPEON">Campeón</th></tr></thead><tbody></tbody></table></div></div></main>
 <main id="strat"><div class="card">
-<p><b>La clave: marcadores exactos.</b> Acertar el marcador exacto da 5 pts — más que ganar ganador+ambos goles (2+1+1). El modelo elige el pick con mayor EV combinando exacto, parciales y un pequeño bono de unicidad. Los marcadores más frecuentes en grupos del Mundial son 1-0, 2-0, 2-1 y 1-1 — el modelo ya los prioriza.</p>
-<p><b>Bono unicidad (+2):</b> se cobra SOLO si aciertas el marcador exacto Y eres el único que lo puso. El valor esperado real es ~0,1–0,2 pts por partido — útil al margen, pero nunca vale sacrificar un marcador probable por uno raro. El modelo lo pondera correctamente.</p>
-<p><b>Donde se gana de verdad:</b> los bonos de avance (hasta 320 pts totales) valen más que todos los marcadores de grupos juntos. Predice los 32 clasificados por <b>probabilidad real</b> en la pestaña "Quién avanza", no por fama o intuición.</p>
+<p><b>La clave: marcadores exactos.</b> Acertar el marcador exacto da 5 pts — más que ganar ganador+ambos goles. El modelo elige el pick con mayor EV combinando exacto, parciales y bono de unicidad real.</p>
+<p><b>Qué datos usa el modelo en cada pick:</b></p>
+<ul>
+<li><b>Cuotas 1X2 + O/U + Asian Handicap</b> (~23 casas) — 4 constraints determinan λ_local y λ_visitante casi únicamente. Sin O/U, infinitas combinaciones de goles satisfacen el mismo 1X2.</li>
+<li><b>Tarjetas y suspensiones</b> (ESPN, automático) — cada jugador suspendido aplica −10% lambda (cap −25%). Señal 🟥 en el calendario.</li>
+<li><b>Presión de grupo</b> — 0pts en jornada 3 = +15% goles (todo o nada). Ya clasificado = −10% (posible rotación). Señal ⚡ en el calendario.</li>
+<li><b>Movimiento de línea sharp</b> — cuotas que se mueven >12% entre ciclos = dinero informado. El modelo ajusta +6% al lado que se acorta.</li>
+<li><b>Calibración Bayesiana online</b> — aprende de cada gol del Mundial. ATT/DEF por equipo se ajustan con resultados reales.</li>
+<li><b>Elo en vivo</b> — K=40 en grupos, actualizado tras cada resultado.</li>
+</ul>
+<p><b>Bono unicidad (+2):</b> se cobra SOLO si aciertas el exacto Y eres el único. Vale ~0,1–0,2 pts esperados por partido — nunca vale un marcador improbable.</p>
+<p><b>Donde se gana de verdad:</b> bonos de avance (hasta 320 pts) > todos los marcadores de grupos juntos. Pon los 32 clasificados por probabilidad real en "Quién avanza".</p>
 <p><b>Regla adaptativa:</b></p>
-<ul><li>A &lt;8 pts del líder → sigue con los picks del modelo, no cambies nada.</li>
-<li>A 8–20 pts → en partidos parejos elige el marcador menos popular en tu grupo (unicidad real, no estimada).</li>
-<li>A &gt;20 pts → flipea el GANADOR en los 3–4 partidos más parejos que quedan (máxima varianza: el 70% de la ventaja es del líder, necesitas sorprender).</li></ul></div></main>
+<ul>
+<li>A &lt;8 pts del líder → sigue con los picks del modelo, no toques nada.</li>
+<li>A 8–20 pts → en partidos parejos elige el marcador menos popular en tu grupo (cuadrícula en "Hoy").</li>
+<li>A &gt;20 pts → flipea el GANADOR en los 3–4 partidos más parejos que quedan.</li>
+</ul>
+<p class="note">Lesiones de último minuto: edita <b>wc_injuries.json</b> con el nombre del jugador → el siguiente pipeline lo aplica solo.</p>
+</div></main>
 <main id="rules"><div class="card"><table><tbody>
 <tr><td>Marcador exacto</td><td>5</td></tr><tr><td>Ganador o empate acertado</td><td>2</td></tr>
 <tr><td>Gol acertado (por equipo)</td><td>1</td></tr><tr><td>Predicción única</td><td>2</td></tr>
@@ -320,12 +427,13 @@ function render(){
    var p="";
    if(val){ var r=val.split("-"); var got=pts(m.bx,m.by,+r[0],+r[1]); total+=got; nres++;
     p=got+" pts"+((api&&!store[key])?" · auto":""); }
+   var sigStr=(m.signals&&m.signals.length)?' · '+m.signals.join(' · '):'';
    row.innerHTML='<div class="t">'+m.time+'<br>['+m.g+']</div>'
     +'<div><span class="tm">'+esc(m.home)+' – '+esc(m.away)+'</span> '
     +'<span class="pick">'+m.bx+'-'+m.by+'</span> <span class="alt">(EV '+m.evb.toFixed(2)+' pts · P(exacto) '+m.pex+'%'+(m.bx!==m.ax||m.by!==m.ay?' · alternativa '+m.ax+'-'+m.ay:'')+' )</span>'
     +(isClose(m)?'<span class="risk">⚖ parejo</span>':'')
     +'<div class="bar"><i style="width:'+m.ph+'%;background:#1D9E75"></i><i style="width:'+m.pd+'%;background:#B4B2A9"></i><i style="width:'+m.pa+'%;background:#D85A30"></i></div>'
-    +'<div class="t">'+m.ph+'% / '+m.pd+'% / '+m.pa+'%'+(m.mkt?' · 📈 prob. de mercado (23 casas)':'')+' · '+esc(m.venue)+'</div></div>'
+    +'<div class="t">'+m.ph+'% / '+m.pd+'% / '+m.pa+'%'+(m.mkt?' · mercado (O/U+AH+1X2)':'')+sigStr+' · '+esc(m.venue)+'</div></div>'
     +'<div class="right"><input class="res" placeholder="res" value="'+val+'"> <span class="ptsb">'+p+'</span></div>';
    var inp=row.querySelector("input");
    inp.addEventListener("change",function(){

@@ -120,37 +120,105 @@ def fetch_outright_odds():
     return {t: round(statistics.median(v), 2) for t, v in prices.items()}
 
 def fetch_match_odds():
-    """Cuotas 1X2 de cada partido (mediana entre ~20 casas). Es LA señal de mercado
-    fina: incorpora alineaciones y noticias al minuto. 1 peticion por ejecucion."""
-    p = os.path.join(HERE, "match_odds.json")
+    """Cuotas 1X2 + O/U totales + spreads (AH) — una sola peticion a The Odds API.
+    Guarda match_odds.json (1X2) y match_odds_ext.json (datos completos con O/U y AH)."""
+    p     = os.path.join(HERE, "match_odds.json")
+    p_ext = os.path.join(HERE, "match_odds_ext.json")
     if _is_fresh(p):
-        print("match_odds.json reciente (<3h), omitiendo llamada a The Odds API")
+        print("match_odds.json reciente (<1h), omitiendo llamada a The Odds API")
         with open(p, encoding="utf-8") as f:
             return json.load(f)
     if not ODDS_KEY: return []
     import statistics
     url = (f"https://api.the-odds-api.com/v4/sports/soccer_fifa_world_cup/odds"
-           f"/?apiKey={ODDS_KEY}&regions=eu&markets=h2h&oddsFormat=decimal")
-    out = []
+           f"/?apiKey={ODDS_KEY}&regions=eu&markets=h2h,totals,spreads&oddsFormat=decimal")
+    out_h2h, out_ext = [], []
     for ev in _get(url):
         h = NAME_MAP.get(ev["home_team"], ev["home_team"])
         a = NAME_MAP.get(ev["away_team"], ev["away_team"])
         ph, pd_, pa = [], [], []
+        ou_over_by_pt, ou_under_by_pt = {}, {}
+        ah_home_by_pt, ah_away_by_pt  = {}, {}
         for bm in ev.get("bookmakers", []):
             for mk in bm.get("markets", []):
-                if mk["key"] != "h2h": continue
-                for o in mk["outcomes"]:
-                    n = NAME_MAP.get(o["name"], o["name"])
-                    if n == h: ph.append(o["price"])
-                    elif n == a: pa.append(o["price"])
-                    else: pd_.append(o["price"])
-        if ph and pd_ and pa:
-            out.append({"home": h, "away": a, "oh": statistics.median(ph),
-                        "od": statistics.median(pd_), "oa": statistics.median(pa)})
-    if out:
-        with open(os.path.join(HERE, "match_odds.json"), "w", encoding="utf-8") as f:
-            json.dump(out, f, ensure_ascii=False, indent=1)
-    return out
+                key = mk["key"]
+                if key == "h2h":
+                    for o in mk["outcomes"]:
+                        n = NAME_MAP.get(o["name"], o["name"])
+                        if n == h: ph.append(o["price"])
+                        elif n == a: pa.append(o["price"])
+                        else: pd_.append(o["price"])
+                elif key == "totals":
+                    for o in mk["outcomes"]:
+                        pt = o.get("point", 2.5)
+                        if o["name"] == "Over": ou_over_by_pt.setdefault(pt, []).append(o["price"])
+                        else: ou_under_by_pt.setdefault(pt, []).append(o["price"])
+                elif key == "spreads":
+                    for o in mk["outcomes"]:
+                        pt = o.get("point", 0.0)
+                        n  = NAME_MAP.get(o["name"], o["name"])
+                        if n == h: ah_home_by_pt.setdefault(pt, []).append(o["price"])
+                        else: ah_away_by_pt.setdefault(-pt, []).append(o["price"])
+        if not (ph and pd_ and pa): continue
+        h2h = {"home": h, "away": a, "oh": statistics.median(ph),
+               "od": statistics.median(pd_), "oa": statistics.median(pa)}
+        out_h2h.append(h2h)
+        ext = dict(h2h)
+        if ou_over_by_pt:
+            best_pt = max(ou_over_by_pt, key=lambda k: len(ou_over_by_pt[k]))
+            ov_list = ou_over_by_pt[best_pt]; un_list = ou_under_by_pt.get(best_pt, [])
+            if ov_list and un_list:
+                raw_o = 1/statistics.median(ov_list); raw_u = 1/statistics.median(un_list)
+                s = raw_o + raw_u
+                ext["ou_line"] = best_pt; ext["p_over"] = round(raw_o / s, 4)
+        if ah_home_by_pt:
+            best_ah = max(ah_home_by_pt, key=lambda k: len(ah_home_by_pt[k]))
+            hh_list = ah_home_by_pt[best_ah]; ha_list = ah_away_by_pt.get(best_ah, [])
+            if hh_list and ha_list:
+                rh = 1/statistics.median(hh_list); ra = 1/statistics.median(ha_list)
+                s = rh + ra
+                ext["ah_line"] = best_ah; ext["p_ah_home"] = round(rh / s, 4)
+        out_ext.append(ext)
+    if out_h2h:
+        with open(p, "w", encoding="utf-8") as f:
+            json.dump(out_h2h, f, ensure_ascii=False, indent=1)
+    if out_ext:
+        with open(p_ext, "w", encoding="utf-8") as f:
+            json.dump(out_ext, f, ensure_ascii=False, indent=1)
+        ou_n = sum(1 for e in out_ext if "ou_line" in e)
+        ah_n = sum(1 for e in out_ext if "ah_line" in e)
+        print(f"match_odds_ext.json: {len(out_ext)} partidos | {ou_n} con O/U | {ah_n} con AH")
+    return out_h2h
+
+
+def track_odds_movement():
+    """Detecta movimiento de linea vs la snapshot anterior. Guarda odds_movement.json."""
+    import math
+    p = os.path.join(HERE, "match_odds.json"); p_snap = os.path.join(HERE, "odds_snapshot.json")
+    p_mov = os.path.join(HERE, "odds_movement.json")
+    if not os.path.exists(p): return
+    cur = {(o["home"], o["away"]): o for o in json.load(open(p, encoding="utf-8"))}
+    if not os.path.exists(p_snap):
+        json.dump(list(cur.values()), open(p_snap, "w", encoding="utf-8"), indent=1); return
+    prev = {(o["home"], o["away"]): o for o in json.load(open(p_snap, encoding="utf-8"))}
+    movement = []
+    for key, c in cur.items():
+        if key not in prev: continue
+        old = prev[key]
+        dH = math.log(old["oh"] / c["oh"]) if c["oh"] > 0 else 0.0
+        dA = math.log(old["oa"] / c["oa"]) if c["oa"] > 0 else 0.0
+        if abs(dH) > 0.04 or abs(dA) > 0.04:
+            movement.append({"home": key[0], "away": key[1],
+                             "dH": round(dH, 3), "dA": round(dA, 3),
+                             "sharp": abs(dH) > 0.12 or abs(dA) > 0.12})
+    json.dump(movement, open(p_mov, "w", encoding="utf-8"), indent=1)
+    json.dump(list(cur.values()), open(p_snap, "w", encoding="utf-8"), indent=1)
+    sharp = [m for m in movement if m["sharp"]]
+    if movement:
+        print(f"odds_movement.json: {len(movement)} movimientos ({len(sharp)} sharp)")
+    if sharp:
+        for m in sharp:
+            print(f"  *** SHARP *** {m['home']} vs {m['away']}: dH={m['dH']:+.3f} dA={m['dA']:+.3f}")
 
 def update_elo_with_results(results):
     """Q5: aplica elo_update de wc_model_v3 a los resultados nuevos y persiste."""
