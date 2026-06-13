@@ -62,6 +62,15 @@ MAXG = 8
 RHO = -0.08
 BASE = 1.32
 
+# carga elo en vivo si existe: se actualiza despues de cada resultado en elo_live.json
+_elo_path = os.path.join(HERE, "elo_live.json")
+if os.path.exists(_elo_path):
+    with open(_elo_path, encoding="utf-8") as _f:
+        _elo_live = json.load(_f)
+    R0.update(_elo_live["ratings"])
+    RBAR = float(np.mean([R0[t] for t in TEAMS]))   # recalcular con ratings vivos
+    print(f"Ratings en vivo: {len(_elo_live['applied'])} partidos aplicados a R0")
+
 def R(t): return R0[t] + HOST_BOOST.get(t, 0)
 
 def lambdas(a, b, c):

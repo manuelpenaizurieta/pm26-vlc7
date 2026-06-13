@@ -17,15 +17,8 @@ def run(script):
 
 if __name__ == "__main__":
     print(f"Pipeline polla — {datetime.datetime.now():%Y-%m-%d %H:%M}")
-    run("wc_data_feed.py")
-    # si hay Elo en vivo, inyectarlo en el modelo antes de simular
-    elo_path = os.path.join(HERE, "elo_live.json")
-    if os.path.exists(elo_path):
-        import wc_model_v3 as M
-        with open(elo_path, encoding="utf-8") as f:
-            M.R0.update(json.load(f)["ratings"])
-        print("Ratings en vivo cargados de elo_live.json")
-    run("wc_model_v3.py")
+    run("wc_data_feed.py")   # descarga resultados -> actualiza elo_live.json
+    run("wc_model_v3.py")   # importa elo_live.json automaticamente (R0 vivo)
     run("advance_strategy.py")
     run("wc_pool_strategy.py")
     # picks reales de tu grupo desde pollamundial.org (privado, local)
