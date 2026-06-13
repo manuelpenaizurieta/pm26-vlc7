@@ -57,6 +57,14 @@ try:
 except ImportError:
     _WCC = None
 
+# noticias ESPN del Mundial
+NEWS = []
+try:
+    import wc_news as _NEWS
+    NEWS = _NEWS.fetch_news()
+except Exception:
+    pass
+
 def mat_from_lams(la, lb):
     x = np.arange(M.MAXG+1)
     pa_ = np.exp(-la)*la**x/M.FACT; pb_ = np.exp(-lb)*lb**x/M.FACT
@@ -323,7 +331,7 @@ select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:
 <div class="stat"><b>Brier __BRIER__</b><span>calibración modelo (↓ mejor)</span></div>
 <div class="stat"><b><span id="nextrunStat">—</span></b><span>próxima actualización</span></div>
 </div></div>
-<div class="navwrap"><nav><button data-t="hoy" class="on">Hoy: qué hacer</button><button data-t="tabla">Clasificación</button><button data-t="cal">Calendario y picks</button><button data-t="avanza">Quién avanza</button><button data-t="probs">Probabilidades</button><button data-t="strat">Estrategia</button><button data-t="rules">Reglas</button></nav></div>
+<div class="navwrap"><nav><button data-t="hoy" class="on">Hoy: qué hacer</button><button data-t="tabla">Clasificación</button><button data-t="cal">Calendario y picks</button><button data-t="avanza">Quién avanza</button><button data-t="news">Noticias</button><button data-t="probs">Probabilidades</button><button data-t="strat">Estrategia</button><button data-t="rules">Reglas</button></nav></div>
 <main id="hoy" class="on">
 <div class="card" style="border-left:3px solid var(--acc);border-radius:0 14px 14px 0"><b>🔒 Cierra apuestas en</b> <span id="countdown" style="font-weight:700;color:var(--acc)">—</span><div id="nextMatch" class="note" style="margin-top:2px"></div></div>
 <div class="card"><b>1 · Las apuestas se colocan solas</b> <span class="note">El sistema apuesta hasta 6h antes de cada partido y revisa cada 30 min hasta el cierre (saque −20 min). Si el modelo cambia el pick antes del cierre, se actualiza. No tienes que hacer nada.</span>
@@ -360,6 +368,7 @@ __ANALYSIS_TODAY__
 <div class="card"><b>Aquí se gana la polla.</b> <span class="note">Acertar los 32 que pasan vale hasta 320 pts — más que todos los marcadores juntos. El bono es por equipo (R32 10 · octavos 8 · cuartos 4 · semis 2 · final 5). Predice por <b>probabilidad real</b> de pasar, no por fama.</span></div>
 <div class="card"><b>Pon estos 32 equipos como clasificados</b> <span class="note">(ordenados por probabilidad de pasar; en ámbar los dudosos de tu lista)</span><div id="r32list" style="margin-top:8px"></div></div>
 <div class="card"><b>⚠️ Solo si vas perdiendo en la última jornada</b> <span class="note">Lo de arriba es la jugada normal. Únicamente para remontar: cambia tus dudosos por estos, que pasan con buena probabilidad pero casi nadie pondrá (+10 que te separan). Si no necesitas arriesgar, ignóralo.</span><div id="bubblelist" style="margin-top:8px"></div></div></main>
+<main id="news">__NEWS__</main>
 <main id="probs"><div class="card"><p class="note">Probabilidad de cada equipo de llegar a cada fase. Ordenado por "pasa de grupos (R32)". Pulsa una columna para reordenar.</p>
 <div style="position:relative;height:300px;margin-bottom:14px"><canvas id="champChart"></canvas></div>
 <div class="tablewrap"><table id="pt"><thead><tr><th data-k="team">Equipo</th><th data-k="R32">R32</th><th data-k="R16">Octavos</th><th data-k="QF">Cuartos</th><th data-k="SF">Semis</th><th data-k="FINAL">Final</th><th data-k="CAMPEON">Campeón</th></tr></thead><tbody></tbody></table></div></div></main>
@@ -731,6 +740,101 @@ function triggerUpdate(){
 }
 </script></body></html>"""
 
+def news_html(articles, matches_data):
+    """Genera la pestaña Noticias: feed ESPN agrupado por partido próximo."""
+    import datetime as _dt
+    today = _dt.date.today()
+    window_days = 3
+    upcoming = [m for m in matches_data
+                if m.get("date","") >= today.isoformat()
+                and m.get("date","") <= (today + _dt.timedelta(days=window_days)).isoformat()
+                and m.get("rx") is None]  # no jugados
+
+    tag_label = {"lesion": "🏥 Lesión", "tarjeta": "🟨 Tarjeta", "alineacion": "📋 Alineación",
+                 "tactica": "🧠 Táctica", "general": "📰 General"}
+    tag_color = {"lesion": "sig-red", "tarjeta": "sig-yellow", "alineacion": "sig-blue",
+                 "tactica": "sig-green", "general": "sig-gray"}
+
+    if not articles:
+        return '<div class="card"><p class="note">Sin noticias disponibles. Se actualizan cada 30 min.</p></div>'
+
+    # Separar noticias relevantes para próximos partidos vs resto
+    seen = set()
+    blocks = ""
+
+    # Primero: noticias por partido próximo
+    for m in upcoming[:6]:
+        home, away = m["home"], m["away"]
+        rel = [a for a in articles
+               if (home in a["teams"] or away in a["teams"]) and id(a) not in seen]
+        if not rel:
+            continue
+        date_label = "HOY" if m["date"] == today.isoformat() else m["dlabel"]
+        blocks += (f'<div class="card" style="border-left:3px solid var(--acc);border-radius:0 14px 14px 0">'
+                   f'<div style="font-weight:600;margin-bottom:8px">'
+                   f'{home} – {away} <span class="note">{date_label} {m["time"]}'
+                   f' · {m["ph"]}%/{m["pd"]}%/{m["pa"]}%'
+                   f' · pick {m["bx"]}-{m["by"]}</span></div>')
+        for a in rel[:4]:
+            seen.add(id(a))
+            tags_html = "".join(
+                f'<span class="sig {tag_color.get(t,"sig-gray")}" style="font-size:11px">{tag_label.get(t,t)}</span>'
+                for t in a["tags"]
+            )
+            img_html = (f'<img src="{a["img"]}" style="width:80px;height:54px;object-fit:cover;'
+                        f'border-radius:6px;flex-shrink:0" onerror="this.style.display=\'none\'">'
+                        if a["img"] else "")
+            link_open  = f'<a href="{a["link"]}" target="_blank" style="text-decoration:none;color:inherit">' if a["link"] else "<span>"
+            link_close = "</a>" if a["link"] else "</span>"
+            blocks += (
+                f'<div style="display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--line);align-items:flex-start">'
+                f'{img_html}'
+                f'<div style="min-width:0">'
+                f'{link_open}<div style="font-weight:500;font-size:14px;line-height:1.3;margin-bottom:3px">{a["headline"]}</div>{link_close}'
+                f'<div style="font-size:12px;color:var(--sub);margin-bottom:4px">{a["description"]}</div>'
+                f'<div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center">'
+                f'{tags_html}<span class="note" style="font-size:11px">{a["age"]}</span></div>'
+                f'</div></div>'
+            )
+        blocks += '</div>'
+
+    # Resto de noticias generales
+    rest = [a for a in articles if id(a) not in seen]
+    if rest:
+        blocks += '<div class="card"><div style="font-weight:600;margin-bottom:8px">📰 Más del Mundial</div>'
+        for a in rest[:10]:
+            tags_html = "".join(
+                f'<span class="sig {tag_color.get(t,"sig-gray")}" style="font-size:11px">{tag_label.get(t,t)}</span>'
+                for t in a["tags"]
+            )
+            img_html = (f'<img src="{a["img"]}" style="width:72px;height:48px;object-fit:cover;'
+                        f'border-radius:6px;flex-shrink:0" onerror="this.style.display=\'none\'">'
+                        if a["img"] else "")
+            link_open  = f'<a href="{a["link"]}" target="_blank" style="text-decoration:none;color:inherit">' if a["link"] else "<span>"
+            link_close = "</a>" if a["link"] else "</span>"
+            teams_str = ", ".join(a["teams"][:3]) if a["teams"] else ""
+            blocks += (
+                f'<div style="display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--line);align-items:flex-start">'
+                f'{img_html}'
+                f'<div style="min-width:0">'
+                f'{link_open}<div style="font-weight:500;font-size:14px;line-height:1.3;margin-bottom:3px">{a["headline"]}</div>{link_close}'
+                f'<div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center">'
+                f'{tags_html}'
+                f'{"<span class=note style=font-size:11px>"+teams_str+"</span>" if teams_str else ""}'
+                f'<span class="note" style="font-size:11px">{a["age"]}</span></div>'
+                f'</div></div>'
+            )
+        blocks += '</div>'
+
+    import time as _time
+    age_mins = int((_time.time() - os.path.getmtime(os.path.join(HERE,"wc_news.json"))) / 60) if os.path.exists(os.path.join(HERE,"wc_news.json")) else 0
+    header = (f'<div class="card" style="background:var(--card2)">'
+              f'<b>Noticias del Mundial</b> '
+              f'<span class="note">ESPN · {len(articles)} artículos · actualizado hace {age_mins} min · se refresca cada 30 min automáticamente</span>'
+              f'</div>')
+    return header + blocks
+
+
 def analysis_today_html(matches_data):
     """Genera el HTML de la sección '2b · Análisis del modelo para los partidos de hoy/mañana'."""
     import datetime as _dt
@@ -926,7 +1030,8 @@ html = (HTML.replace("__GEN__", _now_cest.strftime("%d %b %Y %H:%M") + " (Valenc
             .replace("__DIFF__", json.dumps(ADV.get("differentiators", []), ensure_ascii=False))
             .replace("__STANDINGS__", json.dumps(STANDINGS, ensure_ascii=False))
             .replace("__SETUP__", setup_items())
-            .replace("__ANALYSIS_TODAY__", analysis_today_html(matches)))
+            .replace("__ANALYSIS_TODAY__", analysis_today_html(matches))
+            .replace("__NEWS__", news_html(NEWS, matches)))
 # picks finales (para la auto-apuesta): "Home|Away" -> [bx, by]
 with open(os.path.join(HERE, "picks.json"), "w", encoding="utf-8") as f:
     json.dump({f"{m['home']}|{m['away']}": [m["bx"], m["by"]] for m in matches}, f, ensure_ascii=False, indent=1)

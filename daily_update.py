@@ -44,6 +44,7 @@ if __name__ == "__main__":
     print(f"Pipeline polla — {datetime.datetime.now():%Y-%m-%d %H:%M}")
     run("wc_data_feed.py")       # descarga resultados + cuotas O/U+AH -> elo_live.json
     run("wc_cards.py")           # tarjetas y suspensiones via ESPN -> wc_suspensions.json
+    run("wc_news.py")            # noticias ESPN del Mundial -> wc_news.json (cache 30min)
     run("wc_live_calibrate.py")  # Bayesian update ATT/DEF/BASE desde goles WC2026
     if should_run_fit_ratings():
         print("\n=== fit_ratings.py (auto-trigger: >=12 partidos de grupo) ===")
