@@ -98,7 +98,7 @@ def policy_picks(a, b, mode):
         for py in range(5):
             ev = sum(mat[ax, ay]*pts(px, py, ax, ay)
                      for ax in range(M.MAXG+1) for ay in range(M.MAXG+1))
-            uniq = 2*(1 - q.get((px, py), 0.0))**N_RIVALS   # E[bono unicidad]
+            uniq = mat[px, py] * 2*(1 - q.get((px, py), 0.0))**N_RIVALS   # E[bono unicidad]
             cand.append((ev, uniq, px, py))
     if mode == "A":
         ev, uniq, px, py = max(cand, key=lambda t: t[0])

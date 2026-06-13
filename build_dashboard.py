@@ -66,7 +66,7 @@ def analyze(home, away):
         for py in range(5):
             ev = sum(mat[ax, ay]*S.pts(px, py, ax, ay)
                      for ax in range(M.MAXG+1) for ay in range(M.MAXG+1))
-            uniq = 2*(1 - q.get((px, py), 0.0))**S.N_RIVALS
+            uniq = mat[px, py] * 2*(1 - q.get((px, py), 0.0))**S.N_RIVALS
             cand.append((ev, uniq, px, py))
     evA, _, axp, ayp = max(cand, key=lambda t: t[0])
     evB, uqB, bxp, byp = max(cand, key=lambda t: t[0]+t[1])
