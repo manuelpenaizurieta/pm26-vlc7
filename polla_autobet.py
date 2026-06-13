@@ -12,7 +12,7 @@ from polla_bet import GID, SUB, SC, put, get
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 CLOSE_MS = 20 * 60 * 1000
-HOURS_AHEAD = 1.5      # apuesta partidos que cierran en las proximas 1.5h (~1h15 antes del saque)
+HOURS_AHEAD = 6.0      # apuesta partidos que cierran en las proximas 6h; si el pick cambia se actualiza
 LOG_PATH = os.path.join(HERE, "apuestas_log.json")
 
 def _log(entry):

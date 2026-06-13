@@ -326,7 +326,7 @@ select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:
 <div class="navwrap"><nav><button data-t="hoy" class="on">Hoy: qué hacer</button><button data-t="tabla">Clasificación</button><button data-t="cal">Calendario y picks</button><button data-t="avanza">Quién avanza</button><button data-t="probs">Probabilidades</button><button data-t="strat">Estrategia</button><button data-t="rules">Reglas</button></nav></div>
 <main id="hoy" class="on">
 <div class="card" style="border-left:3px solid var(--acc);border-radius:0 14px 14px 0"><b>🔒 Cierra apuestas en</b> <span id="countdown" style="font-weight:700;color:var(--acc)">—</span><div id="nextMatch" class="note" style="margin-top:2px"></div></div>
-<div class="card"><b>1 · Las apuestas se colocan solas</b> <span class="note">El sistema apuesta ~1h15 antes de cada partido y revisa cada 15 min hasta el cierre (saque −20 min). No tienes que hacer nada.</span>
+<div class="card"><b>1 · Las apuestas se colocan solas</b> <span class="note">El sistema apuesta hasta 6h antes de cada partido y revisa cada 30 min hasta el cierre (saque −20 min). Si el modelo cambia el pick antes del cierre, se actualiza. No tienes que hacer nada.</span>
 <div id="todayList"></div></div>
 <div class="card"><b>2 · Tu posición en la polla</b> <span class="note">(se actualiza automáticamente con los resultados oficiales)</span>
 <div id="posbox" style="margin-top:6px"></div>
