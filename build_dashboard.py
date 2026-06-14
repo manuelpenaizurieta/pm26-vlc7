@@ -344,7 +344,7 @@ select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:
 <div class="navwrap"><nav><button data-t="hoy" class="on">Hoy: qué hacer</button><button data-t="tabla">Clasificación</button><button data-t="cal">Calendario y picks</button><button data-t="avanza">Quién avanza</button><button data-t="news">Noticias</button><button data-t="probs">Probabilidades</button><button data-t="strat">Estrategia</button><button data-t="rules">Reglas</button></nav></div>
 <main id="hoy" class="on">
 <div class="card" style="border-left:3px solid var(--acc);border-radius:0 14px 14px 0"><b>🔒 Cierra apuestas en</b> <span id="countdown" style="font-weight:700;color:var(--acc)">—</span><div id="nextMatch" class="note" style="margin-top:2px"></div></div>
-<div class="card"><b>1 · Las apuestas se colocan solas</b> <span class="note">El sistema apuesta hasta 6h antes de cada partido y revisa cada 30 min hasta el cierre (saque −20 min). Si el modelo cambia el pick antes del cierre, se actualiza. No tienes que hacer nada.</span>
+<div class="card"><b>1 · Las apuestas se colocan solas</b> <span class="note">El sistema apuesta con mucha anticipación y revisa cada 30 min hasta el cierre (saque −30 min). Si el modelo cambia el pick antes del cierre, se actualiza. No tienes que hacer nada.</span>
 <div id="todayList"></div></div>
 <div class="card"><b>2 · Tu posición en la polla</b> <span class="note">(se actualiza automáticamente con los resultados oficiales)</span>
 <div id="posbox" style="margin-top:6px"></div>
@@ -361,7 +361,7 @@ __ANALYSIS_TODAY__
 <li>👥 Baja los <b>picks reales de tu grupo</b> y calcula tu marcador único óptimo solo</li>
 <li>🏆 Predice los <b>bonos de avance</b> con probabilidades reales del modelo</li>
 <li>✅ Baja <b>resultados oficiales</b> y actualiza tu clasificación</li>
-<li>🤖 <b>Apuesta por ti</b> ~1h15 antes del partido y revisa hasta el cierre</li>
+<li>🤖 <b>Apuesta por ti</b> con anticipación y revisa cada 30 min hasta el cierre (saque −30 min)</li>
 </ul>
 <div class="note">Última actualización: <b>__GEN__</b> · estado de las conexiones:</div>
 <ul style="margin:6px 0 0;padding-left:20px;font-size:14px">__SETUP__</ul></div></main>
@@ -660,9 +660,9 @@ function renderStandings(){
  if(!STANDINGS.length)tb.innerHTML='<tr><td colspan="7" class="note">Aún sin puntos (no se ha jugado ningún partido).</td></tr>';
 }
 render(); renderProbs(); renderHoy(); renderAvanza(); renderStandings();
-// las apuestas cierran 20 min antes del saque (margen de seguridad)
+// las apuestas cierran 30 min antes del saque (la web bloquea las predicciones ahi)
 function kickoff(m){ return new Date(m.date+"T"+(m.time.length===5?m.time:"0"+m.time)+":00+02:00"); }
-function closeTime(m){ return new Date(kickoff(m).getTime()-20*60000); }
+function closeTime(m){ return new Date(kickoff(m).getTime()-30*60000); }
 function hm(ms){ var h=Math.floor(ms/3.6e6), mi=Math.floor((ms%3.6e6)/6e4), d=Math.floor(h/24);
  return (d>0?d+"d ":"")+(h%24)+"h "+mi+"m"; }
 // cuenta atras al CIERRE de apuestas del proximo partido aun abierto

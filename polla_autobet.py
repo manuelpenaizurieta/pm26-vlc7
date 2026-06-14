@@ -3,15 +3,16 @@
 # para CADA partido aun ABIERTO (no cerrado), compara tu apuesta colocada con el
 # pick optimo actual. Si difiere o no hay apuesta -> la coloca/actualiza. Si ya es
 # correcta -> la deja. Salta los partidos cerrados (no se pueden tocar).
-# Cierre = saque - 20 min. Asi, ejecutado cada hora, la ultima pasada antes del
-# cierre deja la apuesta definitiva ("revisar ~1h antes y dejar lo correcto").
+# Cierre = saque - 30 min (la web bloquea las predicciones 30 min antes del saque).
+# Ejecutado cada 30 min, la ultima pasada antes del cierre deja la apuesta definitiva;
+# y como HOURS_AHEAD es amplio el pick ya esta colocado por si falla esa ultima pasada.
 import sys, json, os, time, datetime, urllib.request, urllib.error
 from polla_scraper import login, user_env, DB
 from polla_sync import CODE
 from polla_bet import GID, SUB, SC, put, get
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-CLOSE_MS = 20 * 60 * 1000
+CLOSE_MS = 30 * 60 * 1000   # la web cierra las predicciones 30 min antes del saque
 HOURS_AHEAD = 36.0     # coloca el pick hasta 36h antes del cierre; cada run lo actualiza si cambia
 LOG_PATH = os.path.join(HERE, "apuestas_log.json")
 
