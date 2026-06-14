@@ -620,46 +620,18 @@ function renderHoy(){
  if(!prox.length){ prox=DATA.filter(function(m){return !isPlayed(m)&&closeTime(m)>nowD;}).slice(0,4);
   list.innerHTML='<p class="note">No hay partidos abiertos en las próximas 26 h. Los siguientes:</p>'; }
  prox.forEach(function(m){
-  var key=m.date+"|"+m.home+"|"+m.away;
-  var gkey="grp|"+key;
-  var taken={};
-  if(m.grp){ Object.keys(m.grp).forEach(function(s){taken[s]=true;}); }   // lo que ya bajó del grupo
-  parseGroupList(store[gkey]||"").forEach(function(s){taken[s]=true;});   // + ajustes manuales
   var closed=closeTime(m)<new Date();
   var closeLbl=closeTime(m).toLocaleTimeString("es-ES",{timeZone:"Europe/Madrid",hour:"2-digit",minute:"2-digit"});
   var div=document.createElement("div"); div.style.padding="12px 0"; div.style.borderTop="1px solid var(--line)";
   if(closed)div.style.opacity="0.5";
+  // PICK = el que de verdad se apuesta (m.bx-m.by = maxima probabilidad). Es EXACTAMENTE
+  // lo que el autobet coloca en la web: el dashboard nunca debe mostrar otro marcador.
   div.innerHTML='<div style="display:flex;justify-content:space-between;align-items:baseline">'
    +'<span class="tm">'+esc(m.home)+' – '+esc(m.away)+'</span>'
    +'<span class="t">'+(closed?'<b style="color:#dc2626">CERRADO</b>':'🔒 cierra '+closeLbl)+' · saque '+m.time+'</span></div>'
-   +'<div style="margin:4px 0"><span class="pick" style="font-size:24px"></span> <span class="alt gnote"></span></div>'
-   +'<div class="t">gana '+esc(m.home)+' '+m.ph+'% / empate '+m.pd+'% / gana '+esc(m.away)+' '+m.pa+'%</div>'
-   +'<details style="margin-top:8px"'+(Object.keys(taken).length?' open':'')+'><summary class="t" style="cursor:pointer">👥 ¿qué marcadores ya tiene tu grupo? (toca los que veas en Estadísticas → Mi grupo)</summary>'
-   +'<div class="t" style="margin-top:6px">filas = goles de '+esc(m.home)+' · columnas = goles de '+esc(m.away)+'</div>'
-   +'<div class="sgrid"></div></details>';
-  var pickEl=div.querySelector(".pick"), noteEl=div.querySelector(".gnote"), grid=div.querySelector(".sgrid");
-  function refresh(){
-   var rec=optimalWithGroup(m, Object.keys(taken).join(","));
-   pickEl.textContent=rec.px+" - "+rec.py; noteEl.innerHTML=rec.note;
-  }
-  // cabecera: esquina + goles visitante 0..5
-  var corner=document.createElement("div"); corner.className="axis"; corner.textContent="▢"; grid.appendChild(corner);
-  for(var a=0;a<6;a++){ var hc=document.createElement("div"); hc.className="axis"; hc.textContent=a; grid.appendChild(hc); }
-  for(var h=0;h<6;h++){
-   var rl=document.createElement("div"); rl.className="axis"; rl.textContent=h; grid.appendChild(rl);
-   for(var a2=0;a2<6;a2++){
-    (function(sc){
-     var c=document.createElement("button"); c.className="cell"+(taken[sc]?" on":""); c.textContent=sc;
-     c.addEventListener("click",function(){
-      if(taken[sc]){delete taken[sc];c.classList.remove("on");}else{taken[sc]=true;c.classList.add("on");}
-      store[gkey]=Object.keys(taken).join(","); if(!Object.keys(taken).length)delete store[gkey];
-      save(); refresh();
-     });
-     grid.appendChild(c);
-    })(h+"-"+a2);
-   }
-  }
-  refresh();
+   +'<div style="margin:4px 0"><span class="pick" style="font-size:24px">'+m.bx+' - '+m.by+'</span>'
+   +' <span class="alt gnote">P(exacto) '+m.pex+'% · es el marcador más probable según las cuotas reales</span></div>'
+   +'<div class="t">gana '+esc(m.home)+' '+m.ph+'% / empate '+m.pd+'% / gana '+esc(m.away)+' '+m.pa+'%</div>';
   list.appendChild(div); });
  function rec(){
   var out=document.getElementById("rec"); var box=document.getElementById("posbox");
@@ -669,21 +641,8 @@ function renderHoy(){
   var mi=me.pts, li=lead.pts;
   box.innerHTML="Vas <b>"+me.pos+"º</b> de "+STANDINGS.length+" · <b>"+mi+" pts</b> · líder ("+esc(lead.name)+") "+li+" pts";
   var d=li-mi;
-  if(d<=0){ out.innerHTML="<b style='color:var(--ok)'>Vas LÍDER (+"+(-d)+").</b> Sigue con los picks del modelo. No arriesgues: el sistema ya optimiza exactos y unicidad."; }
-  else if(d<8){ out.innerHTML="<b>A "+d+" pts del líder.</b> Sigue con los picks del modelo. Es ruido estadístico, no cambies nada."; }
-  else if(d<=20){ out.innerHTML="<b style='color:var(--warn)'>A "+d+" pts.</b> En los partidos PAREJOS que vienen, elige el marcador menos popular en tu grupo para cobrar el bono único:"+flips(2); }
-  else { out.innerHTML="<b style='color:#A32D2D'>A "+d+" pts: hay que arriesgar.</b> Flipea el GANADOR en los partidos más parejos que quedan (máxima varianza para remontar):"+flips(4); }
- }
- function flips(n){
-  var hoy2=todayStr();
-  var prox2=DATA.filter(function(m){var k=m.date+"|"+m.home+"|"+m.away;return m.date>=hoy2&&!store[k];})
-   .sort(function(a,b){return Math.abs(a.ph-a.pa)-Math.abs(b.ph-b.pa);}).slice(0,n);
-  return "<ul>"+prox2.map(function(m){
-   var fx=m.ph>=m.pa?0:2, fy=m.ph>=m.pa?2:0;
-   var dog=m.ph>=m.pa?m.away:m.home;
-   return "<li>"+esc(m.home)+" – "+esc(m.away)+" ("+m.dlabel+"): en vez de "+m.bx+"-"+m.by
-    +" pon <b>"+fx+"-"+fy+"</b> (gana "+esc(dog)+", el lado que nadie pisa)</li>";
-  }).join("")+"</ul>";
+  if(d<=0){ out.innerHTML="<b style='color:var(--ok)'>Vas LÍDER (+"+(-d)+").</b> El sistema apuesta solo el marcador más probable en cada partido. No tienes que tocar nada."; }
+  else { out.innerHTML="<b>A "+d+" pts del líder.</b> El sistema apuesta el marcador más probable según las cuotas reales del mercado. La vía para remontar es acertar más <b>exactos</b> que los rivales (que pican a ojo) — no adivinar lo que pusieron. No tienes que tocar nada."; }
  }
  rec();
 }
