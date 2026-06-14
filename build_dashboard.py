@@ -1073,7 +1073,6 @@ print(f"polla_v4.html generado ({len(html)} bytes, {len(matches)} partidos)")
 # polla_v4.html -> index.html y hace push. Aqui NO se copia al Escritorio ni se hace
 # push local a proposito: asi el PC nunca interfiere con la nube (evita copias viejas
 # y conflictos de git push PC-vs-nube). Todo es automatico y no depende de tu PC.
-    print("Publicado en https://manuelpenaizurieta.github.io/pm26-vlc7/")
 print("\nPicks de HOY y manana:")
 hoy = datetime.date.today().isoformat()
 for m in matches[:6]:
