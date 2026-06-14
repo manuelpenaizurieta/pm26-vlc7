@@ -98,8 +98,8 @@ def policy_picks(a, b, mode):
         for py in range(M.MAXG+1):
             ev = sum(mat[ax, ay]*pts(px, py, ax, ay)
                      for ax in range(M.MAXG+1) for ay in range(M.MAXG+1))
-            # bono unicidad correcto: +2 PLANO (el bono no depende del exacto, es fijo)
-            uniq = 2 * (1 - q.get((px, py), 0.0))**N_RIVALS
+            # bono unicidad: +2 SOLO cuando aciertas exacto Y eres unico
+            uniq = mat[min(px,M.MAXG), min(py,M.MAXG)] * 2 * (1 - q.get((px, py), 0.0))**N_RIVALS
             cand.append((ev, uniq, px, py))
     if mode == "A":
         ev, uniq, px, py = max(cand, key=lambda t: t[0])

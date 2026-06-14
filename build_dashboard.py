@@ -154,8 +154,9 @@ def analyze(home, away):
         for py in range(M.MAXG+1):
             ev = sum(mat[ax, ay]*S.pts(px, py, ax, ay)
                      for ax in range(M.MAXG+1) for ay in range(M.MAXG+1))
-            # bono unicidad correcto: +2 PLANO si pick es unico, no condicionado al exacto
-            uniq = 2 * (1 - q.get((px, py), 0.0))**S.N_RIVALS
+            # bono unicidad: +2 SOLO si aciertas exacto Y eres unico
+            # E[bonus] = P(exacto) * 2 * P(ningun rival lo tiene)
+            uniq = mat[min(px,M.MAXG), min(py,M.MAXG)] * 2 * (1 - q.get((px, py), 0.0))**S.N_RIVALS
             cand.append((ev, uniq, px, py))
     evA, _, axp, ayp = max(cand, key=lambda t: t[0])
     evB, uqB, bxp, byp = max(cand, key=lambda t: t[0]+t[1])
@@ -213,19 +214,20 @@ except FileNotFoundError:
     pass
 
 def group_optimal(a, taken):
-    """Mejor marcador = max( EV base + 2 pts planos de bono unico si nadie en el grupo lo tiene ).
-    El bono unico en la polla es +2 pts fijos (no condicional al resultado exacto).
-    Grid expandido a 0-8 para capturar goleadas en partidos de desigualdad extrema."""
-    g6 = a["g6"]; p6 = a.get("p6", [[0]*6 for _ in range(6)]); best = None
-    n = len(g6)   # puede ser 6 o 9 segun version del modelo
+    """Mejor marcador = max( EV base + P(exacto)*2 si tu grupo NO lo tiene ).
+    El bono unico en la polla es +2 pts SOLO cuando aciertas el marcador exacto Y eres unico.
+    E[bonus] = P(exacto) * 2. Grid expandido a 0-8 para goleadas en mismatches extremos.
+    Penaliza -0.15 pts por rival con el mismo pick: ventaja competitiva de diferenciarse."""
+    g6 = a["g6"]; p6 = a.get("p6", [[0]*9 for _ in range(9)]); best = None
+    n = len(g6)
     for px in range(M.MAXG+1):
         for py in range(M.MAXG+1):
-            if px < n and py < n:
-                ev = g6[px][py]
-            else:
-                ev = 0   # scores muy altos: EV aproximado a 0 (improbables)
-            uniq_bonus = 0 if f"{px}-{py}" in taken else 2   # +2 PLANO, no P(exacto)*2
-            tot = ev + uniq_bonus
+            ev = g6[px][py] if px < n and py < n else 0
+            pe = p6[px][py] if px < n and py < n else 0
+            rival_cnt = taken.get(f"{px}-{py}", 0) if isinstance(taken, dict) else (1 if f"{px}-{py}" in taken else 0)
+            uniq_bonus = 0 if rival_cnt > 0 else pe * 2   # P(exacto)*2
+            conflict_pen = rival_cnt * 0.15  # penaliza rivales con mismo pick
+            tot = ev + uniq_bonus - conflict_pen
             if best is None or tot > best[0]: best = (tot, px, py)
     return best[1], best[2]
 
@@ -543,11 +545,12 @@ function optimalWithGroup(m, gtxt){
   var n=m.auto?"✅ ajustado a tu grupo (automático) · P(exacto) "+m.pex+"%":"P(exacto) "+m.pex+"%"+(m.bx!==m.ax||m.by!==m.ay?" · alternativa "+m.ax+"-"+m.ay:"");
   return {px:m.bx, py:m.by, note:n};
  }
- // con datos del grupo: bono unico correcto = +2 PLANO si nadie mas lo tiene
+ // con datos del grupo: bono unico = P(exacto)*2 SOLO cuando aciertas el marcador exacto
  var best=null;
- var gMax=(m.g6&&m.g6.length)||6;
+ var gMax=(m.g6&&m.g6.length)||9;
  for(var px=0;px<gMax;px++) for(var py=0;py<gMax;py++){
-  var total=m.g6[px][py]+(!taken[px+"-"+py]?2:0);
+  var pex_cell=(m.p6&&m.p6[px]&&m.p6[px][py]!=null)?m.p6[px][py]:0;
+  var total=m.g6[px][py]+(!taken[px+"-"+py]?pex_cell*2:0);
   if(!best||total>best.total) best={px:px,py:py,total:total};
  }
  var nT=Object.keys(taken).length;
