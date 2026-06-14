@@ -91,16 +91,48 @@ def fetch_results():
                     "gh": ft["home"], "ga": ft["away"], "stage": m["stage"]})
     return out
 
-ODDS_FRESH_SECS = 1 * 3600  # rellamar la API si el archivo tiene >1h (pipeline cada 15min)
+# Cache ADAPTATIVO de cuotas: el presupuesto de The Odds API es 500 req/mes, asi que
+# no podemos rellamar cada pasada todo el dia. La estrategia (lo que pidio el usuario:
+# pick base con anticipacion + revision de ultimo minuto con la mejor info):
+#   - Si hay un partido por CERRAR pronto (<CRITICAL_MIN del cierre = saque-30): cuotas
+#     MUY frescas (las cuotas ya incorporan alineaciones/lesiones de ultima hora).
+#   - Si el proximo cierre esta lejos: cache largo, no gastar API en partidos lejanos.
+CRITICAL_MIN   = 90          # ventana de "revision de ultimo minuto" antes del cierre
+FRESH_CRITICAL = 12 * 60     # en ventana critica: refresca si el archivo tiene >12 min
+FRESH_FAR      = 6 * 3600    # lejos del cierre: cache 6h (ahorra presupuesto de API)
+CLOSE_BEFORE_MS = 30 * 60 * 1000   # la web cierra las predicciones 30 min antes del saque
+
+def _next_close_minutes():
+    """Minutos hasta el cierre (saque-30min) del proximo partido aun no cerrado.
+    Lee polla_matches.json (existe de runs previos). None si no hay datos."""
+    p = os.path.join(HERE, "polla_matches.json")
+    if not os.path.exists(p):
+        return None
+    try:
+        pm = json.load(open(p, encoding="utf-8"))
+    except (json.JSONDecodeError, IOError):
+        return None
+    now = time.time() * 1000
+    closes = [m["ts"] - CLOSE_BEFORE_MS for m in pm.values()
+              if isinstance(m, dict) and m.get("ts")]
+    future = [c for c in closes if c > now]    # cierres que aun no pasaron
+    return (min(future) - now) / 60000 if future else None
+
+def _fresh_secs():
+    """Segundos de cache vigente segun proximidad del proximo cierre (adaptativo)."""
+    mins = _next_close_minutes()
+    if mins is not None and mins < CRITICAL_MIN:
+        return FRESH_CRITICAL
+    return FRESH_FAR
 
 def _is_fresh(path):
-    return os.path.exists(path) and time.time() - os.path.getmtime(path) < ODDS_FRESH_SECS
+    return os.path.exists(path) and time.time() - os.path.getmtime(path) < _fresh_secs()
 
 def fetch_outright_odds():
     """Cuotas de campeon (decimales, mediana entre casas) desde The Odds API."""
     p = os.path.join(HERE, "odds_latest.json")
     if _is_fresh(p):
-        print("odds_latest.json reciente (<3h), omitiendo llamada a The Odds API")
+        print(f"odds_latest.json fresco (cache {_fresh_secs()//60}min), omitiendo The Odds API")
         with open(p, encoding="utf-8") as f:
             return json.load(f)
     if not ODDS_KEY:
@@ -125,7 +157,9 @@ def fetch_match_odds():
     p     = os.path.join(HERE, "match_odds.json")
     p_ext = os.path.join(HERE, "match_odds_ext.json")
     if _is_fresh(p):
-        print("match_odds.json reciente (<1h), omitiendo llamada a The Odds API")
+        nm = _next_close_minutes()
+        ctx = f"proximo cierre en {nm:.0f}min" if nm is not None else "sin partidos proximos"
+        print(f"match_odds.json fresco (cache {_fresh_secs()//60}min, {ctx}), omitiendo The Odds API")
         with open(p, encoding="utf-8") as f:
             return json.load(f)
     if not ODDS_KEY: return []
