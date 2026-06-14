@@ -1069,22 +1069,10 @@ with open(out, "w", encoding="utf-8") as f:
     f.write(html)
 print(f"polla_v4.html generado ({len(html)} bytes, {len(matches)} partidos)")
 
-# copia en el Escritorio para abrir con doble clic
-desktop = os.path.join(os.path.expanduser("~"), "OneDrive", "Desktop")
-if os.path.isdir(desktop):
-    import shutil
-    shutil.copy(out, os.path.join(desktop, "Polla Mundial 2026.html"))
-    print(f"Copia en el Escritorio: {os.path.join(desktop, 'Polla Mundial 2026.html')}")
-
-# publicacion web para el movil (github pages): copia + push silencioso
-web = os.path.join(os.path.expanduser("~"), "polla_web")
-if os.path.isdir(os.path.join(web, ".git")):
-    import shutil, subprocess
-    shutil.copy(out, os.path.join(web, "index.html"))
-    for cmd in (["git", "-C", web, "add", "index.html"],
-                ["git", "-C", web, "commit", "-q", "-m", "actualizacion"],
-                ["git", "-C", web, "push", "-q"]):
-        subprocess.run(cmd, capture_output=True)
+# NOTA: la publicacion la hace SOLO la nube (GitHub Actions cada 30 min): copia
+# polla_v4.html -> index.html y hace push. Aqui NO se copia al Escritorio ni se hace
+# push local a proposito: asi el PC nunca interfiere con la nube (evita copias viejas
+# y conflictos de git push PC-vs-nube). Todo es automatico y no depende de tu PC.
     print("Publicado en https://manuelpenaizurieta.github.io/pm26-vlc7/")
 print("\nPicks de HOY y manana:")
 hoy = datetime.date.today().isoformat()

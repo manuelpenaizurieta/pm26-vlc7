@@ -64,7 +64,22 @@ def sync():
                             "stage": "GROUP"})
     with open(os.path.join(HERE, "group_stats.json"), "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, indent=1)
-    with open(os.path.join(HERE, "results_live.json"), "w", encoding="utf-8") as f:
+    # MERGE de resultados: la polla manda (consistente con los puntos oficiales), pero
+    # conserva los que ya trajo ESPN/football-data (wc_data_feed) y la polla aun no
+    # puntuo -> el MODELO aprende del gol al pitido final, sin esperar a la polla.
+    rl_path = os.path.join(HERE, "results_live.json")
+    existing = []
+    if os.path.exists(rl_path):
+        try:
+            with open(rl_path, encoding="utf-8-sig") as f:
+                existing = json.load(f)
+        except (json.JSONDecodeError, IOError):
+            existing = []
+    seen = {(r["home"], r["away"]) for r in results}
+    for r in existing:
+        if (r["home"], r["away"]) not in seen and (r["away"], r["home"]) not in seen:
+            results.append(r)
+    with open(rl_path, "w", encoding="utf-8") as f:
         json.dump(results, f, ensure_ascii=False, indent=1)
 
     # 3) tabla de posiciones del grupo -> standings.json

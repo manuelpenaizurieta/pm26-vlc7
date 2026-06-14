@@ -91,6 +91,57 @@ def fetch_results():
                     "gh": ft["home"], "ga": ft["away"], "stage": m["stage"]})
     return out
 
+ESPN_SB = "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard"
+
+def fetch_results_espn(days_back=5):
+    """Resultados FINALIZADOS del Mundial desde ESPN (tiempo real, sin clave). Es la
+    fuente mas rapida: marca el resultado al pitido final, sin esperar a football-data
+    ni a que la polla puntue. Solo equipos que el modelo conoce (evita partidos fantasma)."""
+    import datetime
+    try:
+        import wc_model_v3 as _M
+        known = set(_M.R0) if hasattr(_M, "R0") else set()
+    except Exception:
+        known = set()
+    out = []
+    today = datetime.datetime.utcnow().date()
+    for i in range(days_back + 1):
+        d = (today - datetime.timedelta(days=i)).strftime("%Y%m%d")
+        try:
+            data = _get(f"{ESPN_SB}?dates={d}")
+        except Exception:
+            continue
+        for ev in data.get("events", []):
+            if ev.get("status", {}).get("type", {}).get("state") != "post":
+                continue                     # solo finalizados (no 'in'=en vivo, no 'pre')
+            cs = ev.get("competitions", [{}])[0].get("competitors", [])
+            if len(cs) != 2:
+                continue
+            try:
+                hc = next(c for c in cs if c.get("homeAway") == "home")
+                ac = next(c for c in cs if c.get("homeAway") == "away")
+                h = NAME_MAP.get(hc["team"]["displayName"], hc["team"]["displayName"])
+                a = NAME_MAP.get(ac["team"]["displayName"], ac["team"]["displayName"])
+                gh, ga = int(hc["score"]), int(ac["score"])
+            except (KeyError, StopIteration, ValueError):
+                continue
+            if known and (h not in known or a not in known):
+                continue                     # nombre no mapeado -> lo ignora
+            out.append({"date": ev.get("date", "")[:10], "home": h, "away": a,
+                        "gh": gh, "ga": ga, "stage": "GROUP_STAGE"})
+    return out
+
+def merge_results(*sources):
+    """Une varias listas de resultados por (home,away); la primera fuente tiene prioridad."""
+    seen, out = set(), []
+    for src in sources:
+        for r in src:
+            key = (r["home"], r["away"])
+            if key in seen:
+                continue
+            seen.add(key); out.append(r)
+    return out
+
 # Cache ADAPTATIVO de cuotas: el presupuesto de The Odds API es 500 req/mes, asi que
 # no podemos rellamar cada pasada todo el dia. La estrategia (lo que pidio el usuario:
 # pick base con anticipacion + revision de ultimo minuto con la mejor info):
@@ -278,8 +329,12 @@ def update_elo_with_results(results):
 
 if __name__ == "__main__":
     print(f"=== wc_data_feed {datetime.date.today()} ===")
-    results = fetch_results()
-    print(f"{len(results)} partidos terminados descargados")
+    # ESPN (tiempo real, sin clave) PRIMERO; football-data como respaldo. Asi el modelo
+    # aprende del resultado al pitido final, sin esperar a que la polla lo puntue.
+    espn = fetch_results_espn()
+    fd   = fetch_results()
+    results = merge_results(espn, fd)          # ESPN tiene prioridad
+    print(f"resultados: {len(espn)} ESPN + {len(fd)} football-data -> {len(results)} unicos")
     if results:
         # resultados crudos para que build_dashboard los embeba en el tablero
         with open(os.path.join(HERE, "results_live.json"), "w", encoding="utf-8") as f:
