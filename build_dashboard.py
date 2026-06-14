@@ -255,9 +255,15 @@ for m in CAL:
         rv = RES.get((m["away"], m["home"]))
         rr = (rv[1], rv[0]) if rv else (None, None)
     taken = GROUP.get(f"{m['home']}|{m['away']}")
-    auto = bool(taken)
-    if auto:                       # pick ya ajustado a tu grupo, automatico
-        a["bx"], a["by"] = group_optimal(a, taken)
+    # PICK JUGADO = maxima EV/probabilidad PURA (a['ax'],a['ay']), sin sesgarse por el
+    # grupo. Razon: no conocemos la asignacion individual del grupo (solo un agregado de
+    # ~10 personas por marcador), asi que optimizar por ella desvia el pick de lo mas
+    # probable (nos llevo a poner Alemania 2-0 cuando el modelo espera 4-0). La ventaja
+    # sobre los rivales viene de la CALIDAD del modelo (calibrado con cuotas reales del
+    # mercado), no de adivinar que puso el grupo. El bono de unicidad (+2) se cobra igual
+    # cuando aciertas un marcador probable poco comun, sin sacrificar probabilidad por el.
+    a["bx"], a["by"] = a["ax"], a["ay"]
+    auto = False
     matches.append({**{k: m[k] for k in ("g", "home", "away", "date", "time", "dow", "dlabel", "venue")},
                     **a, "rx": rr[0], "ry": rr[1], "auto": auto, "grp": taken or None})
 
