@@ -248,12 +248,12 @@ for m in CAL:
 rows = [{k: r.get(k) for k in ("team", "R32", "R16", "QF", "SF", "FINAL", "CAMPEON", "R32_sd", "CAMPEON_sd")}
         for r in PROBS["rows"]]
 
-# optimizador de bonos de avance (advance_strategy.py)
+# bonos de avance (advance_strategy.py) — TODO-O-NADA, marginales (EV ~1 pt total)
 try:
     with open(os.path.join(HERE, "advance_picks.json"), encoding="utf-8") as f:
-        ADV = json.load(f)["stages"]["R32"]
-except (FileNotFoundError, KeyError):
-    ADV = {"picks": [], "bubble": [], "differentiators": []}
+        ADV = json.load(f)
+except FileNotFoundError:
+    ADV = {"stages": {}, "max_pts": 29, "total_exp_bonus": 0, "note": ""}
 
 HTML = """<!DOCTYPE html>
 <html lang="es"><head><meta charset="utf-8">
@@ -375,9 +375,8 @@ __ANALYSIS_TODAY__
 <label class="note" style="margin-left:12px"><input type="checkbox" id="onlyClose"> parejos ⚖</label></div>
 <div id="days"></div></main>
 <main id="avanza">
-<div class="card"><b>Aquí se gana la polla.</b> <span class="note">Acertar los 32 que pasan vale hasta 320 pts — más que todos los marcadores juntos. El bono es por equipo (R32 10 · octavos 8 · cuartos 4 · semis 2 · final 5). Predice por <b>probabilidad real</b> de pasar, no por fama.</span></div>
-<div class="card"><b>Pon estos 32 equipos como clasificados</b> <span class="note">(ordenados por probabilidad de pasar; en ámbar los dudosos de tu lista)</span><div id="r32list" style="margin-top:8px"></div></div>
-<div class="card"><b>⚠️ Solo si vas perdiendo en la última jornada</b> <span class="note">Lo de arriba es la jugada normal. Únicamente para remontar: cambia tus dudosos por estos, que pasan con buena probabilidad pero casi nadie pondrá (+10 que te separan). Si no necesitas arriesgar, ignóralo.</span><div id="bubblelist" style="margin-top:8px"></div></div></main>
+<div class="card"><b>Los bonos de avance son marginales.</b> <span class="note">Regla REAL de tu grupo: cada bono es <b>todo-o-nada</b> — solo lo cobras si aciertas <b>TODOS</b> los equipos que pasan de esa ronda (acertar 7 de 8 = 0 pts). Máximo 29 pts en total y casi imposibles de cobrar (EV realista ~1 pt). <b>La polla se gana en los MARCADORES, no aquí.</b></span></div>
+<div class="card"><b>Jugada óptima: favoritos, NO diferenciarse.</b> <span class="note">En un bono todo-o-nada, un pick contrarian que falla te borra el bono entero. Por eso pones los más probables. El único con algo de valor es el campeón (EV ~0.9 pts).</span><div id="advlist" style="margin-top:8px"></div></div></main>
 <main id="news">__NEWS__</main>
 <main id="probs"><div class="card"><p class="note">Probabilidad de cada equipo de llegar a cada fase. Ordenado por "pasa de grupos (R32)". Pulsa una columna para reordenar.</p>
 <div style="position:relative;height:300px;margin-bottom:14px"><canvas id="champChart"></canvas></div>
@@ -394,7 +393,7 @@ __ANALYSIS_TODAY__
 <li><b>Elo en vivo</b> — K=40 en grupos, actualizado tras cada resultado.</li>
 </ul>
 <p><b>Bono unicidad (+2):</b> se cobra SOLO si aciertas el exacto Y eres el único. Vale ~0,1–0,2 pts esperados por partido — nunca vale un marcador improbable.</p>
-<p><b>Donde se gana de verdad:</b> bonos de avance (hasta 320 pts) > todos los marcadores de grupos juntos. Pon los 32 clasificados por probabilidad real en "Quién avanza".</p>
+<p><b>Donde se gana de verdad:</b> los MARCADORES, sobre todo los exactos (5 pts, o 7 si eres único). Los bonos de avance son todo-o-nada y marginales (EV ~1 pt total). No los persigas con picks arriesgados.</p>
 <p><b>Regla adaptativa:</b></p>
 <ul>
 <li>A &lt;8 pts del líder → sigue con los picks del modelo, no toques nada.</li>
@@ -415,7 +414,6 @@ __ANALYSIS_TODAY__
 var DATA=__DATA__;
 var PROBS=__PROBS__;
 var ADV=__ADV__;
-var DIFF=__DIFF__;
 var STANDINGS=__STANDINGS__;
 var store={};
 try{ store=JSON.parse(localStorage.getItem("polla_v4")||"{}"); }catch(e){ store={}; }
@@ -636,21 +634,19 @@ function renderHoy(){
  rec();
 }
 function renderAvanza(){
- var probMap={}; PROBS.forEach(function(r){probMap[r.team]=r.R32;});
- var picks=ADV.picks.slice().sort(function(a,b){return probMap[b]-probMap[a];});
- var html=picks.map(function(t){
-  var p=probMap[t]; var shaky=p<65;             // dudosos de tu lista
-  var col=shaky?"#d97706":"var(--ink)";
-  return '<span style="display:inline-block;margin:3px 6px 3px 0;padding:3px 9px;border:1px solid '+(shaky?"#d97706":"var(--line)")+';border-radius:8px;font-size:13px;color:'+col+'">'
-   +esc(t)+' <b>'+pct(p)+'</b></span>';
+ var el=document.getElementById("advlist"); if(!el)return;
+ var order=["b32","b16","bQ","bS","bF"];
+ var stages=ADV.stages||{};
+ var html=order.filter(function(k){return stages[k];}).map(function(k){
+  var s=stages[k];
+  var pl=(s.picks||[]).map(function(t){return esc(t);}).join(", ");
+  return '<div style="padding:6px 0;border-top:1px solid var(--line);font-size:14px">'
+   +'<b>'+esc(s.label)+'</b> <span class="note">(vale '+s.pts+' pts · acierta '+s.n
+   +' · P(todos) '+s.p_all+'% · EV '+(s.exp_bonus||0).toFixed(2)+' pts)</span><br>'
+   +'<span style="color:var(--ink)">'+pl+'</span></div>';
  }).join("");
- document.getElementById("r32list").innerHTML=html;
- // emergency lever: solo los diferenciadores (cambios contrarian), una lista simple
- var bh=DIFF.map(function(d){
-  return '<div style="padding:5px 0;border-top:1px solid var(--line);font-size:14px;color:#0e9f6e">'
-   +'<b>'+esc(d.team)+'</b> — pasa '+pct(d.p)+', pero solo el '+d.field+'% de rivales lo pondrá</div>';
- }).join("");
- document.getElementById("bubblelist").innerHTML=bh||'<span class="note">Esta vez no hay diferenciadores claros: la burbuja coincide con lo que pondrá todo el mundo.</span>';
+ el.innerHTML=html+'<div class="note" style="margin-top:8px">EV total de los bonos: '
+  +(ADV.total_exp_bonus||0).toFixed(1)+' pts (máx '+(ADV.max_pts||29)+'). Marginal frente a los marcadores.</div>';
 }
 function renderStandings(){
  var tb=document.querySelector("#standtbl tbody"); if(!tb)return; tb.innerHTML="";
@@ -1038,7 +1034,6 @@ html = (HTML.replace("__GEN__", _now_cest.strftime("%d %b %Y %H:%M") + " (Valenc
             .replace("__DATA__", json.dumps(matches, ensure_ascii=False))
             .replace("__PROBS__", json.dumps(rows, ensure_ascii=False))
             .replace("__ADV__", json.dumps(ADV, ensure_ascii=False))
-            .replace("__DIFF__", json.dumps(ADV.get("differentiators", []), ensure_ascii=False))
             .replace("__STANDINGS__", json.dumps(STANDINGS, ensure_ascii=False))
             .replace("__SETUP__", setup_items())
             .replace("__ANALYSIS_TODAY__", analysis_today_html(matches))

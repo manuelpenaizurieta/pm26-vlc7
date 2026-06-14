@@ -18,9 +18,19 @@ CODE = {
  "UZB":"Uzbekistan",
 }
 
-# valores de puntos (verificados en el codigo de la web)
-PT = {"ceS": 5, "ccW": 2, "ccG": 1, "cuP": 2}
-BONUS = {"bonusRoundr32": 10, "countcorrectRoundr32": 10}  # placeholders por si aparecen
+# valores de puntos REALES del grupo (bajados de bettinggroups/<GID>/rules -> polla_rules.json).
+# Mapeo: rules usa eS/cW/cG/uP; el 'table' de cada jugador usa ceS/ccW/ccG/cuP.
+# Los bonos b32/b16/bQ/bS/bF son TODO-O-NADA por fase (acertar TODOS los equipos que pasan);
+# se cobran al cerrar cada fase eliminatoria -> aun no aparecen en 'table'.
+_DEFAULT_RULES = {"eS": 5, "cW": 2, "cG": 1, "uP": 2,
+                  "b32": 10, "b16": 8, "bQ": 4, "bS": 2, "bF": 5, "bL": 0}
+try:
+    with open(os.path.join(HERE, "polla_rules.json"), encoding="utf-8") as _f:
+        _RULES = json.load(_f)
+except FileNotFoundError:
+    _RULES = _DEFAULT_RULES
+PT = {"ceS": _RULES.get("eS", 5), "ccW": _RULES.get("cW", 2),
+      "ccG": _RULES.get("cG", 1), "cuP": _RULES.get("uP", 2)}
 
 def sync():
     matches = json.load(open(os.path.join(HERE, "polla_matches.json"), encoding="utf-8"))

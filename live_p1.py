@@ -1,13 +1,21 @@
 #!/usr/bin/env python3
 # P(quedar 1o) en tiempo real — combina:
 #  (a) standings actuales (pts reales de cada jugador)
-#  (b) simula partidos RESTANTES con las matrices del modelo
+#  (b) simula partidos RESTANTES con las matrices del modelo PERTURBADO
 #  (c) mis picks = picks.json (ya optimizados con el grupo)
 #  (d) picks de rivales = distribucion empirica de group_stats (o sintetico)
 #  (e) bono de unicidad exacto en cada simulacion
-#  (f) bonos de avance R32 (mi pred real vs sintetico de rivales)
-#  (g) Brier score corriente (calibracion) sobre los partidos ya jugados
+#  (f) Brier score corriente (calibracion) sobre los partidos ya jugados
 # Salida: live_stats.json
+#
+# IMPORTANTE (correccion 2026-06-14): esta polla es 100% marcadores. NO existe bono
+# de avance/clasificados (los campos reales de puntos son ceS/ccW/ccG/cuP, todos de
+# marcador). Se elimino el bono R32 ficticio que inflaba P(1o) a 98%.
+#
+# Tambien: la "verdad" simulada NO debe salir de mi punto-estimado exacto del modelo,
+# porque mis picks son el argmax de ESE modelo -> me daria ventaja artificial sobre
+# rivales. Se perturban los lambdas (incertidumbre del modelo) para que la verdad sea
+# tan incierta para mi como para ellos. SIGMA_MODEL calibra esa incertidumbre.
 import json, os, math, datetime, time
 import numpy as np
 from collections import Counter
@@ -17,6 +25,34 @@ import wc_pool_strategy as S
 HERE = os.path.dirname(os.path.abspath(__file__))
 N_SIM = 5000
 RNG = np.random.default_rng(42)
+SIGMA_MODEL = 0.33      # incertidumbre del modelo en log-lambda (la verdad != mi estimacion puntual)
+K_POOL = 40             # matrices perturbadas por partido (captura la incertidumbre parametrica)
+
+def mat_from_lams(la, lb):
+    """Matriz Dixon-Coles 9x9 desde lambdas (igual que build_dashboard/wc_model)."""
+    x = np.arange(M.MAXG + 1)
+    pa_ = np.exp(-la) * la**x / M.FACT
+    pb_ = np.exp(-lb) * lb**x / M.FACT
+    mat = np.outer(pa_, pb_)
+    mat[0, 0] *= 1 - la*lb*M.RHO; mat[0, 1] *= 1 + la*M.RHO
+    mat[1, 0] *= 1 + lb*M.RHO;    mat[1, 1] *= 1 - M.RHO
+    np.clip(mat, 0, None, out=mat)   # la correccion DC puede dar celdas negativas con lambdas extremos
+    return mat / mat.sum()
+
+def perturbed_pool(h, a, C_val, k=K_POOL):
+    """Pool de k matrices con lambdas perturbados ~ lognormal(0, SIGMA_MODEL).
+    Muestrear la verdad de este pool = reconocer que el futuro real difiere de mi
+    mejor estimacion tanto como del pick de un rival."""
+    try:
+        la, lb = M.lambdas(h, a, C_val)
+    except Exception:
+        return None
+    pool = []
+    for _ in range(k):
+        fa = math.exp(RNG.normal(0, SIGMA_MODEL))
+        fb = math.exp(RNG.normal(0, SIGMA_MODEL))
+        pool.append(mat_from_lams(max(.05, la*fa), max(.05, lb*fb)))
+    return pool
 
 def load(name, default=None):
     p = os.path.join(HERE, name)
@@ -109,8 +145,6 @@ def run(n_sim=N_SIM):
         h, a = key.split("|")
         picks_me[(h, a)] = (int(v[0]), int(v[1]))
 
-    my_r32 = S.my_r32_prediction()
-
     # partidos ya jugados (orden canonico = el del calendario, igual al de polla_sync)
     completed_dict = {}
     for r in (results_list or []):
@@ -138,13 +172,10 @@ def run(n_sim=N_SIM):
                 "brier": brier_score(results_list or [], C_val),
                 "n_remaining": 0, "my_base": me_entry["pts"], "my_rank": me_entry.get("pos", "?")}
 
-    # matrices de marcador para partidos restantes
-    matrices = {}
+    # pool de matrices PERTURBADAS por partido (la verdad es incierta para todos por igual)
+    pools = {}
     for (h, a) in remaining:
-        try:
-            matrices[(h, a)] = M.build_matrix(h, a, C_val)
-        except Exception:
-            matrices[(h, a)] = None
+        pools[(h, a)] = perturbed_pool(h, a, C_val)
 
     # distribuciones de picks de rivales para partidos restantes
     rival_dists = {
@@ -157,16 +188,14 @@ def run(n_sim=N_SIM):
 
     wins = 0
     for _ in range(n_sim):
-        # simular resultados de partidos restantes
+        # simular resultados: verdad muestreada de una matriz PERTURBADA aleatoria del pool
         sim_res = {}
         for (h, a) in remaining:
-            mat = matrices.get((h, a))
-            sim_res[(h, a)] = sample_mat(mat) if mat is not None else (1, 0)
-
-        # R32 a partir de resultados reales + simulados
-        all_res = dict(completed_dict)
-        all_res.update(sim_res)
-        real_r32 = r32_from_results(all_res)
+            pool = pools.get((h, a))
+            if pool:
+                sim_res[(h, a)] = sample_mat(pool[int(RNG.integers(len(pool)))])
+            else:
+                sim_res[(h, a)] = (1, 0)
 
         # picks de rivales para partidos restantes (muestreados independientemente)
         rival_picks = [
@@ -174,10 +203,7 @@ def run(n_sim=N_SIM):
             for _ in range(n_rivals)
         ]
 
-        # predicciones R32 de rivales (sintetico con ruido)
-        rival_r32_preds = [S.rival_r32_prediction() for _ in range(n_rivals)]
-
-        # puntos de marcadores restantes
+        # puntos de marcadores restantes (100% de la polla — no hay bono de avance)
         my_match    = 0
         rival_match = np.zeros(n_rivals)
         uniq_pool   = {}
@@ -191,25 +217,23 @@ def run(n_sim=N_SIM):
                 rival_match[k] += S.pts(r_pks[k][0], r_pks[k][1], ax, ay)
             uniq_pool[(h, a)] = r_pks + [my_pk]   # rival picks primero, yo al final
 
-        # bono de unicidad sobre partidos restantes
+        # bono de unicidad sobre partidos restantes (+2 SOLO si el pick unico ademas es exacto)
         my_uniq    = 0
         rival_uniq = np.zeros(n_rivals)
         for (h, a) in remaining:
-            pool = uniq_pool[(h, a)]
-            cnt  = Counter(pool)
-            if cnt[pool[-1]] == 1:          # mi pick unico
+            ax, ay = sim_res[(h, a)]
+            pool   = uniq_pool[(h, a)]
+            cnt    = Counter(pool)
+            mp     = pool[-1]
+            if cnt[mp] == 1 and mp == (ax, ay):    # mi pick unico Y exacto
                 my_uniq += 2
             for k in range(n_rivals):
-                if cnt[pool[k]] == 1:
+                if cnt[pool[k]] == 1 and pool[k] == (ax, ay):
                     rival_uniq[k] += 2
 
-        # bonos de avance R32
-        my_r32b    = 10 * len(my_r32 & real_r32)
-        rival_r32b = np.array([10 * len(rp & real_r32) for rp in rival_r32_preds])
-
-        # totales finales
-        my_total     = my_base + my_match + my_uniq + my_r32b
-        rival_totals = rival_bases + rival_match + rival_uniq + rival_r32b
+        # totales finales (solo marcadores + unicidad)
+        my_total     = my_base + my_match + my_uniq
+        rival_totals = rival_bases + rival_match + rival_uniq
 
         if my_total > rival_totals.max():
             wins += 1

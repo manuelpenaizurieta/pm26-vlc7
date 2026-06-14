@@ -30,15 +30,21 @@ def fetch_all():
                 taken[sc] = taken.get(sc, 0) + (v.get("count", 0) if isinstance(v, dict) else 0)
             group_stats[mid] = taken
     members = _get(f"{DB}/bettinggroups/{GID}/members.json?auth={tok}") or {}
-    return out_matches, group_stats, members
+    rules = _get(f"{DB}/bettinggroups/{GID}/rules.json?auth={tok}") or {}
+    return out_matches, group_stats, members, rules
 
 if __name__ == "__main__":
-    matches, gstats, members = fetch_all()
+    matches, gstats, members, rules = fetch_all()
     for fn, data in [("polla_matches.json", matches), ("polla_groupstats.json", gstats),
-                     ("polla_members.json", members)]:
-        with open(os.path.join(HERE, fn), "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=1)
+                     ("polla_members.json", members), ("polla_rules.json", rules)]:
+        if data:
+            with open(os.path.join(HERE, fn), "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=1)
     print(f"{len(matches)} partidos, {len(gstats)} con picks de tu grupo, {len(members)} miembros")
+    if rules:
+        print(f"reglas: exacto={rules.get('eS')} ganador={rules.get('cW')} gol={rules.get('cG')} "
+              f"unico={rules.get('uP')} | bonos avance (TODO-O-NADA) b32={rules.get('b32')} "
+              f"b16={rules.get('b16')} bQ={rules.get('bQ')} bS={rules.get('bS')} bF={rules.get('bF')}")
     # muestra los primeros con datos de grupo
     for mid in ["CM1", "CM2", "CM3"]:
         m = matches.get(mid, {})
