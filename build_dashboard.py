@@ -150,19 +150,20 @@ def analyze(home, away):
     q = S.rival_pick_dist(home, away)
     pH = float(np.tril(mat, -1).sum()); pD = float(np.trace(mat)); pA = float(np.triu(mat, 1).sum())
     cand = []
-    for px in range(5):
-        for py in range(5):
+    for px in range(M.MAXG+1):   # grid 0-8 (era 0-4)
+        for py in range(M.MAXG+1):
             ev = sum(mat[ax, ay]*S.pts(px, py, ax, ay)
                      for ax in range(M.MAXG+1) for ay in range(M.MAXG+1))
-            uniq = mat[px, py] * 2*(1 - q.get((px, py), 0.0))**S.N_RIVALS
+            # bono unicidad correcto: +2 PLANO si pick es unico, no condicionado al exacto
+            uniq = 2 * (1 - q.get((px, py), 0.0))**S.N_RIVALS
             cand.append((ev, uniq, px, py))
     evA, _, axp, ayp = max(cand, key=lambda t: t[0])
     evB, uqB, bxp, byp = max(cand, key=lambda t: t[0]+t[1])
     g6 = [[round(sum(mat[ax, ay]*S.pts(px, py, ax, ay)
                      for ax in range(M.MAXG+1) for ay in range(M.MAXG+1)), 3)
-           for py in range(6)] for px in range(6)]
+           for py in range(M.MAXG+1)] for px in range(M.MAXG+1)]
     p6 = [[round(float(mat[min(px, M.MAXG), min(py, M.MAXG)]), 4)
-           for py in range(6)] for px in range(6)]
+           for py in range(M.MAXG+1)] for px in range(M.MAXG+1)]
 
     signals = []
     if ph_mult > 1.05: signals.append("presion " + home)
@@ -212,12 +213,19 @@ except FileNotFoundError:
     pass
 
 def group_optimal(a, taken):
-    """Mejor marcador = max( EV base + P(exacto)*2 si tu grupo NO lo tiene )."""
+    """Mejor marcador = max( EV base + 2 pts planos de bono unico si nadie en el grupo lo tiene ).
+    El bono unico en la polla es +2 pts fijos (no condicional al resultado exacto).
+    Grid expandido a 0-8 para capturar goleadas en partidos de desigualdad extrema."""
     g6 = a["g6"]; p6 = a.get("p6", [[0]*6 for _ in range(6)]); best = None
-    for px in range(6):
-        for py in range(6):
-            uniq_bonus = 0 if f"{px}-{py}" in taken else p6[px][py] * 2
-            tot = g6[px][py] + uniq_bonus
+    n = len(g6)   # puede ser 6 o 9 segun version del modelo
+    for px in range(M.MAXG+1):
+        for py in range(M.MAXG+1):
+            if px < n and py < n:
+                ev = g6[px][py]
+            else:
+                ev = 0   # scores muy altos: EV aproximado a 0 (improbables)
+            uniq_bonus = 0 if f"{px}-{py}" in taken else 2   # +2 PLANO, no P(exacto)*2
+            tot = ev + uniq_bonus
             if best is None or tot > best[0]: best = (tot, px, py)
     return best[1], best[2]
 
@@ -535,11 +543,11 @@ function optimalWithGroup(m, gtxt){
   var n=m.auto?"✅ ajustado a tu grupo (automático) · P(exacto) "+m.pex+"%":"P(exacto) "+m.pex+"%"+(m.bx!==m.ax||m.by!==m.ay?" · alternativa "+m.ax+"-"+m.ay:"");
   return {px:m.bx, py:m.by, note:n};
  }
- // con datos del grupo: bono unico correcto = P(exacto)*2 si nadie mas lo tiene
+ // con datos del grupo: bono unico correcto = +2 PLANO si nadie mas lo tiene
  var best=null;
- for(var px=0;px<6;px++) for(var py=0;py<6;py++){
-  var pex_cell=(m.p6&&m.p6[px]&&m.p6[px][py]!=null)?m.p6[px][py]:0;
-  var total=m.g6[px][py]+(!taken[px+"-"+py]?pex_cell*2:0);
+ var gMax=(m.g6&&m.g6.length)||6;
+ for(var px=0;px<gMax;px++) for(var py=0;py<gMax;py++){
+  var total=m.g6[px][py]+(!taken[px+"-"+py]?2:0);
   if(!best||total>best.total) best={px:px,py:py,total:total};
  }
  var nT=Object.keys(taken).length;

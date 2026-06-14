@@ -94,11 +94,12 @@ def policy_picks(a, b, mode):
     q = rival_pick_dist(a, b)
     pH = float(np.tril(mat, -1).sum()); pA = float(np.triu(mat, 1).sum())
     cand = []
-    for px in range(5):
-        for py in range(5):
+    for px in range(M.MAXG+1):   # grid 0-8 para capturar goleadas
+        for py in range(M.MAXG+1):
             ev = sum(mat[ax, ay]*pts(px, py, ax, ay)
                      for ax in range(M.MAXG+1) for ay in range(M.MAXG+1))
-            uniq = mat[px, py] * 2*(1 - q.get((px, py), 0.0))**N_RIVALS   # E[bono unicidad]
+            # bono unicidad correcto: +2 PLANO (el bono no depende del exacto, es fijo)
+            uniq = 2 * (1 - q.get((px, py), 0.0))**N_RIVALS
             cand.append((ev, uniq, px, py))
     if mode == "A":
         ev, uniq, px, py = max(cand, key=lambda t: t[0])
