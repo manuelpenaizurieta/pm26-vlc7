@@ -65,6 +65,14 @@ try:
 except Exception:
     pass
 
+# Correccion de minnow: cuanto inflar lambda del favorito en un mismatch extremo.
+# Se aplica solo si el favorito gana con prob > MINNOW_PWIN_THR; el boost crece con
+# la extremidad (0 en el umbral, MINNOW_BOOST cuando P(gana)=100%). Conservador a
+# proposito: corrige el sesgo sistematico de compresion de handicaps, no persigue
+# outliers como el 7-1.
+MINNOW_PWIN_THR = 0.80
+MINNOW_BOOST    = 0.22
+
 def mat_from_lams(la, lb):
     x = np.arange(M.MAXG+1)
     pa_ = np.exp(-la)*la**x/M.FACT; pb_ = np.exp(-lb)*lb**x/M.FACT
@@ -146,6 +154,25 @@ def analyze(home, away):
 
         mat = market_matrix(la0_adj, lb0_adj, tH, tA, ou_dt, ah_dt)
         mkt = True
+
+    # CORRECCION DE MINNOW (mismatch extremo): las casas comprimen el handicap asiatico
+    # por gestion de riesgo/liquidez, asi que el mercado (y el modelo calibrado a el)
+    # SUBESTIMAN la goleada. Caso real: Alemania-Curazao acabo 7-1 con el mercado en
+    # AH -3.5 (~4 goles). En mismatches claros inflamos lambda del favorito para
+    # engrosar la cola de goleadas (4-0/5-0 en vez de quedarse en 3-0).
+    pH_t = float(np.tril(mat, -1).sum()); pA_t = float(np.triu(mat, 1).sum())
+    p_win = max(pH_t, pA_t)
+    minnow = False
+    if p_win > MINNOW_PWIN_THR:
+        eh_ = sum(i*float(mat[i, :].sum()) for i in range(mat.shape[0]))
+        ea_ = sum(j*float(mat[:, j].sum()) for j in range(mat.shape[1]))
+        boost = MINNOW_BOOST * (p_win - MINNOW_PWIN_THR) / (1 - MINNOW_PWIN_THR)
+        if pH_t >= pA_t:
+            eh_ *= (1 + boost)
+        else:
+            ea_ *= (1 + boost)
+        mat = mat_from_lams(max(.05, eh_), max(.05, ea_))
+        minnow = True
 
     q = S.rival_pick_dist(home, away)
     pH = float(np.tril(mat, -1).sum()); pD = float(np.trace(mat)); pA = float(np.triu(mat, 1).sum())
