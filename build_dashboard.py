@@ -142,7 +142,12 @@ def analyze(home, away):
         if ext and "ah_line" in ext:
             ah_line = -ext["ah_line"] if flip else ext["ah_line"]
             p_ah    = (1 - ext["p_ah_home"]) if flip else ext["p_ah_home"]
-            ah_dt   = (ah_line, p_ah)
+            # Solo lineas FRACCIONARIAS (±0.5, ±1.5...): ahi p_ah_home es prob absoluta.
+            # En lineas ENTERAS (0.0, ±1...) el empate es push y p_ah_home es CONDICIONAL
+            # (excluye el push); usarla como absoluta infla al local e invierte el favorito
+            # en partidos parejos (bug detectado en CostaMarfil-Ecuador). Se omite el AH ahi.
+            if abs(ah_line - round(ah_line)) > 0.01:
+                ah_dt = (ah_line, p_ah)
 
         mov = MOVEMENT.get((home, away)) or (MOVEMENT.get((away, home)) if flip else None)
         if mov and mov.get("sharp"):
