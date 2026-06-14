@@ -2,8 +2,10 @@ name: Actualizar polla mundial
 
 on:
   schedule:
-    - cron: '5 * * * *'   # cada hora a las :05 UTC (GitHub es más fiable con intervalos >=1h)
-    - cron: '35 * * * *'  # segunda pasada a las :35 UTC (2 veces por hora = cada 30 min)
+    # cada 15 min (repo PUBLICO = minutos de Actions ilimitados). Reduce la espera
+    # maxima tras un partido. GitHub puede retrasar un cron en horas pico, pero con
+    # 4 pasadas/hora siempre cae una pronto. ESPN da el resultado al pitido final.
+    - cron: '5,20,35,50 * * * *'
   push:
     branches: [main]       # también se lanza en cada push nuestro
     paths-ignore:
