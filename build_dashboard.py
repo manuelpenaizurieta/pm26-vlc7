@@ -214,19 +214,35 @@ except FileNotFoundError:
     pass
 
 def group_optimal(a, taken):
-    """Mejor marcador = max( EV base + P(exacto)*2 si tu grupo NO lo tiene ).
-    El bono unico en la polla es +2 pts SOLO cuando aciertas el marcador exacto Y eres unico.
-    E[bonus] = P(exacto) * 2. Grid expandido a 0-8 para goleadas en mismatches extremos.
-    Penaliza -0.15 pts por rival con el mismo pick: ventaja competitiva de diferenciarse."""
+    """Mejor marcador maximizando EV + bono de unicidad, con dos salvaguardas que
+    evitan el sesgo de apostar a marcadores cerrados unicos en goleadas evidentes:
+
+    1. El bono de unicidad (+2 si aciertas exacto Y eres unico) SOLO cuenta si el
+       marcador es CREIBLE: P(exacto) >= 0.85*pico. En mismatches extremos el modelo
+       (y el mercado, que acota el handicap por gestion de riesgo) subestiman la cola
+       de goleadas, asi que un marcador cerrado unico de COLA (ej. 2-0 cuando se
+       espera 4-0) tiene P(exacto) inflada -> no perseguir su unicidad.
+    2. Penalizacion por rival con tu mismo pick (favorece separacion): FUERTE cuando
+       existe un unico creible al que romper (partido parejo -> separate), SUAVE
+       cuando no (goleada -> compartir el marcador mas probable con 1 rival es mejor
+       que un unico de cola improbable)."""
     g6 = a["g6"]; p6 = a.get("p6", [[0]*9 for _ in range(9)]); best = None
     n = len(g6)
+    def cnt_of(px, py):
+        return taken.get(f"{px}-{py}", 0) if isinstance(taken, dict) else (1 if f"{px}-{py}" in taken else 0)
+    pmax = max((p6[px][py] for px in range(n) for py in range(n)), default=0.0)
+    thr  = 0.85 * pmax                       # umbral de "marcador creible" (cerca del pico)
+    has_credible_unique = any(p6[px][py] >= thr and cnt_of(px, py) == 0
+                              for px in range(n) for py in range(n))
+    pen_factor = 0.15 if has_credible_unique else 0.03
     for px in range(M.MAXG+1):
         for py in range(M.MAXG+1):
             ev = g6[px][py] if px < n and py < n else 0
             pe = p6[px][py] if px < n and py < n else 0
-            rival_cnt = taken.get(f"{px}-{py}", 0) if isinstance(taken, dict) else (1 if f"{px}-{py}" in taken else 0)
-            uniq_bonus = 0 if rival_cnt > 0 else pe * 2   # P(exacto)*2
-            conflict_pen = rival_cnt * 0.15  # penaliza rivales con mismo pick
+            rival_cnt = cnt_of(px, py)
+            credible = pe >= thr
+            uniq_bonus = pe * 2 if (rival_cnt == 0 and credible) else 0
+            conflict_pen = rival_cnt * pen_factor
             tot = ev + uniq_bonus - conflict_pen
             if best is None or tot > best[0]: best = (tot, px, py)
     return best[1], best[2]
