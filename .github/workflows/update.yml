@@ -1,52 +1,54 @@
 name: Actualizar polla mundial
 
+# El schedule de GitHub Actions es POCO FIABLE (se salta ejecuciones durante horas).
+# Solucion sin depender de el ni de servicios externos: cada run arranca un BUCLE que
+# actualiza cada 15 min durante ~5,5h. Mientras haya un run vivo, el sistema se
+# actualiza solo. El schedule cada hora solo sirve para RE-ARRANCAR el bucle si se
+# cayo; el trabajo de cada 15 min lo garantiza el bucle interno, no el reloj de GitHub.
 on:
   schedule:
-    # cada 15 min (repo PUBLICO = minutos de Actions ilimitados). Reduce la espera
-    # maxima tras un partido. GitHub puede retrasar un cron en horas pico, pero con
-    # 4 pasadas/hora siempre cae una pronto. ESPN da el resultado al pitido final.
-    - cron: '5,20,35,50 * * * *'
+    - cron: '7 * * * *'    # cada hora: re-arranca el bucle si hizo falta
   push:
-    branches: [main]       # también se lanza en cada push nuestro
+    branches: [main]
     paths-ignore:
-      - 'index.html'       # evita el bucle (el workflow hace push de index.html)
-  workflow_dispatch:        # lanzamiento manual desde GitHub
+      - 'index.html'       # el bucle pushea index.html; no debe re-disparar el workflow
+  workflow_dispatch:
+
+concurrency:
+  group: polla-update
+  cancel-in-progress: true  # un arranque nuevo reemplaza al bucle viejo (nunca dos a la vez)
 
 jobs:
   update:
     runs-on: ubuntu-latest
+    timeout-minutes: 350     # ~5,8h: el bucle cubre los huecos cuando GitHub no dispara
     permissions:
       contents: write
-
     steps:
       - uses: actions/checkout@v4
-        env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
       - uses: actions/setup-python@v5
-        env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         with:
           python-version: '3.11'
-
       - name: Instalar dependencias
         run: pip install numpy scipy
-
-      - name: Ejecutar pipeline
+      - name: Bucle de actualizacion (cada 15 min, ~5,4h por run)
         env:
           POLLA_EMAIL: ${{ secrets.POLLA_EMAIL }}
           POLLA_PASS: ${{ secrets.POLLA_PASS }}
           FOOTBALL_DATA_TOKEN: ${{ secrets.FOOTBALL_DATA_TOKEN }}
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
-        run: python daily_update.py
-
-      - name: Publicar tablero
         run: |
           git config user.email "github-actions@github.com"
           git config user.name "github-actions[bot]"
-          git fetch origin main
-          git reset --hard origin/main
-          cp polla_v4.html index.html
-          git add index.html
-          git diff --staged --quiet || git commit -m "actualizacion $(date -u +%Y-%m-%dT%H:%M)"
-          git push
+          END=$((SECONDS + 19500))   # ~5,4h de bucle
+          while true; do
+            echo "=== vuelta $(date -u +%H:%M:%S) UTC ==="
+            git fetch origin main && git reset --hard origin/main
+            python daily_update.py || echo "pipeline fallo esta vuelta, sigo"
+            cp polla_v4.html index.html || true
+            git add index.html
+            git diff --staged --quiet || git commit -m "auto $(date -u +%Y-%m-%dT%H:%M)"
+            git push || echo "push fallo, reintento la siguiente vuelta"
+            if [ $SECONDS -ge $END ]; then echo "fin del bucle, el schedule re-arranca"; break; fi
+            sleep 900   # 15 min
+          done
