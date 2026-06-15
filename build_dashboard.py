@@ -71,7 +71,8 @@ except Exception:
 # proposito: corrige el sesgo sistematico de compresion de handicaps, no persigue
 # outliers como el 7-1.
 MINNOW_PWIN_THR = 0.80
-MINNOW_BOOST    = 0.22
+MINNOW_BOOST    = 0.45   # subido de 0.22: Alemania-Curazao acabo 7-1 con el modelo en ~4;
+                         # los grandes golean a los minnows MAS de lo que el mercado comprimido dice
 
 def mat_from_lams(la, lb):
     x = np.arange(M.MAXG+1)
@@ -237,6 +238,16 @@ try:
 except FileNotFoundError:
     pass
 
+# OVERRIDES manuales: picks fijados a mano que el piloto automatico DEBE respetar
+# (no recalcular). Formato: {"Home|Away": [gx, gy]}. Para jugadas deliberadas como
+# aprovechar un hueco de goleada que el grupo no tiene. Se commitea (lo usa la nube).
+OVERRIDE = {}
+try:
+    with open(os.path.join(HERE, "picks_override.json"), encoding="utf-8") as f:
+        OVERRIDE = json.load(f)
+except FileNotFoundError:
+    pass
+
 # tabla de posiciones del grupo (standings.json). Privado: solo en tu URL secreta.
 STANDINGS = []
 try:
@@ -296,6 +307,10 @@ for m in CAL:
     # cuando aciertas un marcador probable poco comun, sin sacrificar probabilidad por el.
     a["bx"], a["by"] = a["ax"], a["ay"]
     auto = False
+    ovr = OVERRIDE.get(f"{m['home']}|{m['away']}")
+    if ovr:                       # pick fijado a mano: el piloto automatico lo respeta
+        a["bx"], a["by"] = int(ovr[0]), int(ovr[1])
+        a["override"] = True
     matches.append({**{k: m[k] for k in ("g", "home", "away", "date", "time", "dow", "dlabel", "venue")},
                     **a, "rx": rr[0], "ry": rr[1], "auto": auto, "grp": taken or None})
 
