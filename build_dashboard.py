@@ -257,19 +257,20 @@ except FileNotFoundError:
     pass
 
 def group_optimal(a, taken):
-    """Mejor marcador maximizando EV + bono de unicidad, con dos salvaguardas que
-    evitan el sesgo de apostar a marcadores cerrados unicos en goleadas evidentes:
+    """PICK = sintesis grupo + analisis, con una regla LIMPIA para separarse:
 
-    1. El bono de unicidad (+2 si aciertas exacto Y eres unico) SOLO cuenta si el
-       marcador es CREIBLE: P(exacto) >= 0.85*pico. En mismatches extremos el modelo
-       (y el mercado, que acota el handicap por gestion de riesgo) subestiman la cola
-       de goleadas, asi que un marcador cerrado unico de COLA (ej. 2-0 cuando se
-       espera 4-0) tiene P(exacto) inflada -> no perseguir su unicidad.
-    2. Penalizacion por rival con tu mismo pick (favorece separacion): FUERTE cuando
-       existe un unico creible al que romper (partido parejo -> separate), SUAVE
-       cuando no (goleada -> compartir el marcador mas probable con 1 rival es mejor
-       que un unico de cola improbable)."""
-    g6 = a["g6"]; p6 = a.get("p6", [[0]*9 for _ in range(9)]); best = None
+    Se PARTE del marcador de mayor EV (el optimo segun las cuotas reales). Solo se
+    DESVIA a otro marcador si ese marcador esta LIBRE (0 rivales del grupo lo tienen)
+    y aporta mas valor que quedarse en el pico. NUNCA se desvia a un marcador que otro
+    rival YA tiene: eso bajaria la probabilidad de acertar SIN ganar unicidad (el error
+    de jugar 1-0 cuando el optimo es 2-0 y el 1-0 tampoco es unico -> pierdes en ambas).
+
+      - Bono de unicidad (+2) en un marcador libre solo si es CREIBLE (P >= 0.85*pico),
+        para no perseguir marcadores de cola improbables solo por ser unicos.
+      - El pico se penaliza por cada rival amontonado en el (premia separarse a un hueco
+        libre): FUERTE (0.15) si existe un marcador libre y creible al que romper
+        (partido parejo), SUAVE (0.03) si no (goleada -> clavar el mas probable manda)."""
+    g6 = a["g6"]; p6 = a.get("p6", [[0]*9 for _ in range(9)])
     n = len(g6)
     def cnt_of(px, py):
         return taken.get(f"{px}-{py}", 0) if isinstance(taken, dict) else (1 if f"{px}-{py}" in taken else 0)
@@ -277,17 +278,24 @@ def group_optimal(a, taken):
     thr  = 0.85 * pmax                       # umbral de "marcador creible" (cerca del pico)
     has_credible_unique = any(p6[px][py] >= thr and cnt_of(px, py) == 0
                               for px in range(n) for py in range(n))
-    pen_factor = 0.15 if has_credible_unique else 0.03
+    sep_pen = 0.15 if has_credible_unique else 0.03
+    # 1) punto de partida: marcador de mayor EV (el "pico"), penalizado si esta saturado
+    peak = None
     for px in range(M.MAXG+1):
         for py in range(M.MAXG+1):
             ev = g6[px][py] if px < n and py < n else 0
+            if peak is None or ev > peak[0]: peak = (ev, px, py)
+    _, peak_x, peak_y = peak
+    best = (peak[0] - cnt_of(peak_x, peak_y) * sep_pen, peak_x, peak_y)
+    # 2) solo se considera DESVIARSE a marcadores LIBRES (0 rivales)
+    for px in range(M.MAXG+1):
+        for py in range(M.MAXG+1):
+            if (px, py) == (peak_x, peak_y) or cnt_of(px, py) != 0: continue
+            ev = g6[px][py] if px < n and py < n else 0
             pe = p6[px][py] if px < n and py < n else 0
-            rival_cnt = cnt_of(px, py)
-            credible = pe >= thr
-            uniq_bonus = pe * 2 if (rival_cnt == 0 and credible) else 0
-            conflict_pen = rival_cnt * pen_factor
-            tot = ev + uniq_bonus - conflict_pen
-            if best is None or tot > best[0]: best = (tot, px, py)
+            uniq_bonus = pe * 2 if pe >= thr else 0
+            tot = ev + uniq_bonus
+            if tot > best[0]: best = (tot, px, py)
     return best[1], best[2]
 
 matches = []
