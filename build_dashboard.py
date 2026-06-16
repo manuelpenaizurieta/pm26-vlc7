@@ -248,6 +248,18 @@ try:
 except FileNotFoundError:
     pass
 
+# PICK DE LA VUELTA ANTERIOR (picks.json de la pasada previa; archivo NO trackeado, asi
+# que sobrevive al git reset del bucle en la nube). Sirve para la HISTERESIS: no cambiar
+# un pick ya colocado por ruido de cuotas de ultimo minuto si el nuevo optimo apenas lo
+# supera (evita el flip-flop 2-0<->1-0 entre marcadores casi empatados, sin valor real).
+PREV_PICKS = {}
+try:
+    with open(os.path.join(HERE, "picks.json"), encoding="utf-8") as f:
+        PREV_PICKS = json.load(f)
+except (FileNotFoundError, ValueError):
+    pass
+HYST = 0.05   # margen de E[pts]: solo cambiar el pick si el nuevo lo supera por >0.05
+
 # tabla de posiciones del grupo (standings.json). Privado: solo en tu URL secreta.
 STANDINGS = []
 try:
@@ -284,6 +296,17 @@ def group_optimal(a, taken):
             if best is None or tot > best[0]: best = (tot, px, py)
     return best[1], best[2]
 
+def epts_of(a, px, py, taken):
+    """E[pts] de jugar (px,py) con el mismo criterio que group_optimal: EV del modelo +
+    bono de unicidad (2*P) si el marcador esta LIBRE en el grupo. Para la histeresis."""
+    g6 = a["g6"]; p6 = a.get("p6", [[0]*9 for _ in range(9)]); n = len(g6)
+    if px >= n or py >= n:
+        return 0.0
+    def cnt_of(i, j):
+        return taken.get(f"{i}-{j}", 0) if isinstance(taken, dict) else (1 if f"{i}-{j}" in taken else 0)
+    free = (taken is not None) and cnt_of(px, py) == 0
+    return g6[px][py] + (2 * p6[px][py] if free else 0.0)
+
 matches = []
 for m in CAL:
     a = analyze(m["home"], m["away"])
@@ -292,16 +315,22 @@ for m in CAL:
         rv = RES.get((m["away"], m["home"]))
         rr = (rv[1], rv[0]) if rv else (None, None)
     taken = GROUP.get(f"{m['home']}|{m['away']}")
-    # PICK = SINTESIS grupo + analisis. group_optimal busca el marcador de mayor EV y, si
-    # el grupo se amontona en el mas probable, se desvia a un GAP CREIBLE (un marcador casi
-    # igual de probable que nadie del grupo tiene) para separarse. La "regla del marcador
-    # creible" impide perseguir marcadores improbables (el error de Alemania 2-0 de cola).
-    # En un Mundial impredecible y yendo ultimos, separarse con gaps creibles > seguir a la
-    # manada. Sin datos de grupo -> probabilidad pura (a['ax'],a['ay']).
+    # PICK = maximizador de E[pts] dado el grupo (group_optimal): clava el marcador de mayor
+    # valor esperado real (EV + bono de unicidad si esta libre). Se desvia a un hueco libre
+    # SOLO cuando su E[pts] real supera al pico. Sin datos de grupo -> probabilidad pura.
     if taken:
         a["bx"], a["by"] = group_optimal(a, taken)
     else:
         a["bx"], a["by"] = a["ax"], a["ay"]
+    # HISTERESIS: si ya habia un pick colocado y el nuevo optimo apenas lo supera (<HYST en
+    # E[pts]), MANTENER el previo -> evita el flip-flop 2-0<->1-0 por ruido de cuotas de
+    # ultimo minuto (un cambio REAL por alineaciones mueve el E[pts] mucho mas que HYST).
+    prev = PREV_PICKS.get(f"{m['home']}|{m['away']}")
+    if prev and len(prev) == 2:
+        new_ep  = epts_of(a, a["bx"], a["by"], taken)
+        prev_ep = epts_of(a, int(prev[0]), int(prev[1]), taken)
+        if prev_ep >= new_ep - HYST:
+            a["bx"], a["by"] = int(prev[0]), int(prev[1])
     auto = bool(taken)
     ovr = OVERRIDE.get(f"{m['home']}|{m['away']}")
     if ovr:                       # pick fijado a mano: manda sobre todo lo demas
