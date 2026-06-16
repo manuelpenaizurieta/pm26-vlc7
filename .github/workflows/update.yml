@@ -55,5 +55,10 @@ jobs:
               gh workflow run "Actualizar polla mundial" && echo "siguiente run lanzado OK" || echo "FALLO al relanzar (revisar TRIGGER_PAT)"
               break
             fi
-            sleep 900   # 15 min
+            # Dormir hasta ~2,5 min antes del PROXIMO cierre (saque-30 min) para dejar la
+            # apuesta DEFINITIVA pegada al cierre (capta cambios de ultimo minuto); si no hay
+            # cierre cercano -> cadencia normal de 15 min. Si falla el calculo -> 900s.
+            nap=$(python -c "import json,time;pm=json.load(open('polla_matches.json'));now=time.time()*1000;C=1800000;f=[m['ts']-C for m in pm.values() if m.get('ts') and m.get('st')=='G' and not m.get('pf') and m['ts']-C>now];print(int(max(45,min(900,(min(f)-now)/1000-150))) if f else 900)" 2>/dev/null || echo 900)
+            echo "duermo ${nap}s (el proximo cierre marca el ritmo)"
+            sleep "$nap"
           done
