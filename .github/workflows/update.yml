@@ -37,10 +37,11 @@ jobs:
           POLLA_PASS: ${{ secrets.POLLA_PASS }}
           FOOTBALL_DATA_TOKEN: ${{ secrets.FOOTBALL_DATA_TOKEN }}
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+          GH_TOKEN: ${{ secrets.TRIGGER_PAT }}   # PAT para auto-lanzar el siguiente run (gh workflow run)
         run: |
           git config user.email "github-actions@github.com"
           git config user.name "github-actions[bot]"
-          END=$((SECONDS + 20400))   # ~5,7h de bucle (deja margen bajo el timeout de 355 min)
+          END=$((SECONDS + 120))   # PRUEBA TEMPORAL: 2 min para verificar el auto-encadenamiento
           while true; do
             echo "=== vuelta $(date -u +%H:%M:%S) UTC ==="
             git fetch origin main && git reset --hard origin/main
@@ -49,6 +50,10 @@ jobs:
             git add index.html
             git diff --staged --quiet || git commit -m "auto $(date -u +%Y-%m-%dT%H:%M)"
             git push || echo "push fallo, reintento la siguiente vuelta"
-            if [ $SECONDS -ge $END ]; then echo "fin del bucle, el schedule re-arranca"; break; fi
+            if [ $SECONDS -ge $END ]; then
+              echo "fin del bucle (~5,7h): lanzo el siguiente run con el PAT (cadena continua)"
+              gh workflow run "Actualizar polla mundial" && echo "siguiente run lanzado OK" || echo "FALLO al relanzar (revisar TRIGGER_PAT)"
+              break
+            fi
             sleep 900   # 15 min
           done
