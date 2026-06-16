@@ -413,7 +413,7 @@ select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:
 <div class="navwrap"><nav><button data-t="hoy" class="on">Hoy: qué hacer</button><button data-t="tabla">Clasificación</button><button data-t="cal">Calendario y picks</button><button data-t="avanza">Quién avanza</button><button data-t="news">Noticias</button><button data-t="probs">Probabilidades</button><button data-t="strat">Estrategia</button><button data-t="rules">Reglas</button></nav></div>
 <main id="hoy" class="on">
 <div class="card" style="border-left:3px solid var(--acc);border-radius:0 14px 14px 0"><b>🔒 Cierra apuestas en</b> <span id="countdown" style="font-weight:700;color:var(--acc)">—</span><div id="nextMatch" class="note" style="margin-top:2px"></div></div>
-<div class="card"><b>1 · Las apuestas se colocan solas</b> <span class="note">El sistema apuesta con mucha anticipación y revisa cada 30 min hasta el cierre (saque −30 min). Si el modelo cambia el pick antes del cierre, se actualiza. No tienes que hacer nada.</span>
+<div class="card"><b>1 · Las apuestas se colocan solas</b> <span class="note">El sistema apuesta con mucha anticipación y revisa cada ~15 min hasta el cierre (saque −30 min). Si el modelo cambia el pick antes del cierre, se actualiza. No tienes que hacer nada.</span>
 <div id="todayList"></div></div>
 <div class="card"><b>2 · Tu posición en la polla</b> <span class="note">(se actualiza automáticamente con los resultados oficiales)</span>
 <div id="posbox" style="margin-top:6px"></div>
@@ -422,15 +422,15 @@ __ANALYSIS_TODAY__
 <div class="card"><b>3 · Qué hace el sistema cada 15 minutos (sin que toques nada)</b>
 <ul style="margin:8px 0 6px;padding-left:20px;font-size:14px;line-height:1.9">
 <li>📊 Descarga cuotas <b>1X2 + O/U + Asian Handicap</b> (~23 casas) y detecta movimiento sharp</li>
-<li>🎯 Calibra lambdas con <b>4 constraints</b>: P(local) + P(visitante) + P(over) + spread → goles casi únicos</li>
+<li>🎯 Ajusta las lambdas Dixon-Coles a esas cuotas (4 constraints) → la mejor estimación de goles del partido</li>
+<li>💥 En goleadas (grande vs equipo muy débil) <b>infla los goles del favorito</b>: el mercado los subestima</li>
 <li>🟥 Baja <b>tarjetas y suspensiones</b> (ESPN) → −10% lambda por jugador suspendido</li>
 <li>⚡ Ajusta por <b>presión de grupo</b>: 0pts en jornada 3 = +15% goles; ya clasificado = −10%</li>
-<li>🔬 <b>Calibración Bayesiana online</b>: aprende de cada gol del Mundial (ATT/DEF por equipo)</li>
+<li>🔬 <b>Calibración Bayesiana online</b>: aprende de cada gol del Mundial</li>
 <li>🎲 Simula <b>30.000 Mundiales</b> (Monte Carlo, bracket oficial FIFA, Elo en vivo)</li>
-<li>👥 Baja los <b>picks reales de tu grupo</b> y calcula tu marcador único óptimo solo</li>
-<li>🏆 Predice los <b>bonos de avance</b> con probabilidades reales del modelo</li>
-<li>✅ Baja <b>resultados oficiales</b> y actualiza tu clasificación</li>
-<li>🤖 <b>Apuesta por ti</b> con anticipación y revisa cada 30 min hasta el cierre (saque −30 min)</li>
+<li>📈 Elige el marcador de <b>máxima probabilidad</b> según las cuotas reales (NO por lo que ponga tu grupo)</li>
+<li>⚡ Resultados en <b>TIEMPO REAL</b> (ESPN, al pitido final) → actualiza tu clasificación</li>
+<li>🤖 <b>Apuesta por ti</b> con anticipación y revisa cada ~15 min hasta el cierre (saque −30 min)</li>
 </ul>
 <div class="note">Última actualización: <b>__GEN__</b> · estado de las conexiones:</div>
 <ul style="margin:6px 0 0;padding-left:20px;font-size:14px">__SETUP__</ul></div></main>
@@ -451,7 +451,7 @@ __ANALYSIS_TODAY__
 <div style="position:relative;height:300px;margin-bottom:14px"><canvas id="champChart"></canvas></div>
 <div class="tablewrap"><table id="pt"><thead><tr><th data-k="team">Equipo</th><th data-k="R32">R32</th><th data-k="R16">Octavos</th><th data-k="QF">Cuartos</th><th data-k="SF">Semis</th><th data-k="FINAL">Final</th><th data-k="CAMPEON">Campeón</th></tr></thead><tbody></tbody></table></div></div></main>
 <main id="strat"><div class="card">
-<p><b>La clave: marcadores exactos.</b> Acertar el marcador exacto da 5 pts — más que ganar ganador+ambos goles. El modelo elige el pick con mayor EV combinando exacto, parciales y bono de unicidad real.</p>
+<p><b>La clave: marcadores exactos.</b> Acertar el marcador exacto da 5 pts — más que ganar ganador+ambos goles. El modelo elige el marcador de <b>máxima probabilidad</b> según las cuotas reales del mercado — NO por lo que ponga tu grupo (esa señal es débil y nos sesgaba a marcadores improbables).</p>
 <p><b>Qué datos usa el modelo en cada pick:</b></p>
 <ul>
 <li><b>Cuotas 1X2 + O/U + Asian Handicap</b> (~23 casas) — 4 constraints determinan λ_local y λ_visitante casi únicamente. Sin O/U, infinitas combinaciones de goles satisfacen el mismo 1X2.</li>
@@ -461,15 +461,10 @@ __ANALYSIS_TODAY__
 <li><b>Calibración Bayesiana online</b> — aprende de cada gol del Mundial. ATT/DEF por equipo se ajustan con resultados reales.</li>
 <li><b>Elo en vivo</b> — K=40 en grupos, actualizado tras cada resultado.</li>
 </ul>
-<p><b>Bono unicidad (+2):</b> se cobra SOLO si aciertas el exacto Y eres el único. Vale ~0,1–0,2 pts esperados por partido — nunca vale un marcador improbable.</p>
+<p><b>Bono unicidad (+2):</b> se cobra SOLO si aciertas el exacto Y eres el único del grupo. El sistema NO lo persigue (no sacrifica probabilidad por ser único); cae solo cuando aciertas un marcador probable poco común.</p>
 <p><b>Donde se gana de verdad:</b> los MARCADORES, sobre todo los exactos (5 pts, o 7 si eres único). Los bonos de avance son todo-o-nada y marginales (EV ~1 pt total). No los persigas con picks arriesgados.</p>
-<p><b>Regla adaptativa:</b></p>
-<ul>
-<li>A &lt;8 pts del líder → sigue con los picks del modelo, no toques nada.</li>
-<li>A 8–20 pts → en partidos parejos elige el marcador menos popular en tu grupo (cuadrícula en "Hoy").</li>
-<li>A &gt;20 pts → flipea el GANADOR en los 3–4 partidos más parejos que quedan.</li>
-</ul>
-<p class="note">Lesiones de último minuto: edita <b>wc_injuries.json</b> con el nombre del jugador → el siguiente pipeline lo aplica solo.</p>
+<p><b>De dónde viene la ventaja:</b> el modelo usa cuotas reales del mercado (lo mejor que existe) mientras los rivales pican a ojo. Si acierta más exactos que ellos a lo largo del torneo, se separa solo — sin adivinar lo que pusieron.</p>
+<p><b>Alineaciones de último minuto:</b> se captan vía las cuotas — cuando se confirma que un crack es suplente, las casas mueven la línea ~1h antes y el sistema baja cuotas frescas y reajusta el pick antes del cierre.</p>
 </div></main>
 <main id="rules"><div class="card"><table><tbody>
 <tr><td>Marcador exacto</td><td>5</td></tr><tr><td>Ganador o empate acertado</td><td>2</td></tr>
@@ -477,7 +472,7 @@ __ANALYSIS_TODAY__
 <tr><td>Bono dieciseisavos</td><td>10</td></tr><tr><td>Bono octavos</td><td>8</td></tr>
 <tr><td>Bono cuartos</td><td>4</td></tr><tr><td>Bono semifinales</td><td>2</td></tr>
 <tr><td>Bono final</td><td>5</td></tr><tr><td>Premios</td><td>70% / 20% / 10%</td></tr>
-</tbody></table><p class="note">Fuente: pollamundial.org (verificado 11 jun 2026).</p></div></main>
+</tbody></table><p class="note"><b>Bonos de avance = TODO-O-NADA</b>: solo se cobran si aciertas TODOS los equipos que pasan de esa ronda (acertar 7 de 8 = 0 pts). Por eso son marginales. Fuente: pollamundial.org (reglas verificadas en la base de datos del grupo).</p></div></main>
 <script>
 "use strict";
 var DATA=__DATA__;
