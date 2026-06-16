@@ -1,20 +1,36 @@
 {
- "n_matches": 4,
- "base_factor": 1.0736,
+ "n_matches": 8,
+ "base_factor": 0.9305,
  "att_delta": {
-  "Mexico": 0.0388,
+  "Mexico": 0.0259,
   "Sudafrica": -0.1178,
-  "CoreaSur": 0.0124,
-  "Chequia": -0.0433,
-  "EEUU": 0.1415,
-  "Paraguay": -0.0195
+  "CoreaSur": 0.0051,
+  "Chequia": -0.0461,
+  "EEUU": 0.1227,
+  "Paraguay": -0.0212,
+  "Catar": -0.043,
+  "Suiza": -0.063,
+  "Brasil": -0.0453,
+  "Marruecos": -0.0192,
+  "Haiti": -0.1178,
+  "Escocia": -0.0657,
+  "Australia": 0.0321,
+  "Turkiye": -0.1178
  },
  "def_delta": {
   "Mexico": -0.1178,
-  "Sudafrica": 0.0388,
-  "CoreaSur": -0.0433,
-  "Chequia": 0.0124,
-  "EEUU": -0.0195,
-  "Paraguay": 0.1415
+  "Sudafrica": 0.0259,
+  "CoreaSur": -0.0461,
+  "Chequia": 0.0051,
+  "EEUU": -0.0212,
+  "Paraguay": 0.1227,
+  "Catar": -0.063,
+  "Suiza": -0.043,
+  "Brasil": -0.0192,
+  "Marruecos": -0.0453,
+  "Haiti": -0.0657,
+  "Escocia": -0.1178,
+  "Australia": -0.1178,
+  "Turkiye": 0.0321
  }
 }

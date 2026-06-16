@@ -110,5 +110,75 @@
     "rc": 0
    }
   ]
+ },
+ "760420": {
+  "Catar": [
+   {
+    "name": "Mahmoud Abunada",
+    "yc": 1,
+    "rc": 0
+   },
+   {
+    "name": "Jassem Gaber",
+    "yc": 1,
+    "rc": 0
+   }
+  ],
+  "Suiza": [
+   {
+    "name": "Denis Zakaria",
+    "yc": 1,
+    "rc": 0
+   }
+  ]
+ },
+ "760419": {
+  "Brasil": [
+   {
+    "name": "Roger Ibañez",
+    "yc": 1,
+    "rc": 0
+   },
+   {
+    "name": "Casemiro",
+    "yc": 1,
+    "rc": 0
+   }
+  ]
+ },
+ "760418": {
+  "Haiti": [
+   {
+    "name": "Jean-Ricner Bellegarde",
+    "yc": 1,
+    "rc": 0
+   }
+  ],
+  "Escocia": [
+   {
+    "name": "Aaron Hickey",
+    "yc": 1,
+    "rc": 0
+   },
+   {
+    "name": "Kenny McLean",
+    "yc": 1,
+    "rc": 0
+   },
+   {
+    "name": "Findlay Curtis",
+    "yc": 1,
+    "rc": 0
+   }
+  ]
+ },
+ "760421": {
+  "Türkiye": [
+   {
+    "name": "Yunus Akgün",
+    "yc": 1,
+    "rc": 0
+   }
+  ]
  }
 }

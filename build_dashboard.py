@@ -298,17 +298,19 @@ for m in CAL:
         rv = RES.get((m["away"], m["home"]))
         rr = (rv[1], rv[0]) if rv else (None, None)
     taken = GROUP.get(f"{m['home']}|{m['away']}")
-    # PICK JUGADO = maxima EV/probabilidad PURA (a['ax'],a['ay']), sin sesgarse por el
-    # grupo. Razon: no conocemos la asignacion individual del grupo (solo un agregado de
-    # ~10 personas por marcador), asi que optimizar por ella desvia el pick de lo mas
-    # probable (nos llevo a poner Alemania 2-0 cuando el modelo espera 4-0). La ventaja
-    # sobre los rivales viene de la CALIDAD del modelo (calibrado con cuotas reales del
-    # mercado), no de adivinar que puso el grupo. El bono de unicidad (+2) se cobra igual
-    # cuando aciertas un marcador probable poco comun, sin sacrificar probabilidad por el.
-    a["bx"], a["by"] = a["ax"], a["ay"]
-    auto = False
+    # PICK = SINTESIS grupo + analisis. group_optimal busca el marcador de mayor EV y, si
+    # el grupo se amontona en el mas probable, se desvia a un GAP CREIBLE (un marcador casi
+    # igual de probable que nadie del grupo tiene) para separarse. La "regla del marcador
+    # creible" impide perseguir marcadores improbables (el error de Alemania 2-0 de cola).
+    # En un Mundial impredecible y yendo ultimos, separarse con gaps creibles > seguir a la
+    # manada. Sin datos de grupo -> probabilidad pura (a['ax'],a['ay']).
+    if taken:
+        a["bx"], a["by"] = group_optimal(a, taken)
+    else:
+        a["bx"], a["by"] = a["ax"], a["ay"]
+    auto = bool(taken)
     ovr = OVERRIDE.get(f"{m['home']}|{m['away']}")
-    if ovr:                       # pick fijado a mano: el piloto automatico lo respeta
+    if ovr:                       # pick fijado a mano: manda sobre todo lo demas
         a["bx"], a["by"] = int(ovr[0]), int(ovr[1])
         a["override"] = True
     matches.append({**{k: m[k] for k in ("g", "home", "away", "date", "time", "dow", "dlabel", "venue")},
@@ -428,7 +430,7 @@ __ANALYSIS_TODAY__
 <li>⚡ Ajusta por <b>presión de grupo</b>: 0pts en jornada 3 = +15% goles; ya clasificado = −10%</li>
 <li>🔬 <b>Calibración Bayesiana online</b>: aprende de cada gol del Mundial</li>
 <li>🎲 Simula <b>30.000 Mundiales</b> (Monte Carlo, bracket oficial FIFA, Elo en vivo)</li>
-<li>📈 Elige el marcador de <b>máxima probabilidad</b> según las cuotas reales (NO por lo que ponga tu grupo)</li>
+<li>📈 Elige el marcador más probable; si tu grupo se amontona ahí, se desvía a un <b>gap creíble</b> (igual de probable, que nadie tiene) para separarse</li>
 <li>⚡ Resultados en <b>TIEMPO REAL</b> (ESPN, al pitido final) → actualiza tu clasificación</li>
 <li>🤖 <b>Apuesta por ti</b> con anticipación y revisa cada ~15 min hasta el cierre (saque −30 min)</li>
 </ul>
@@ -451,7 +453,7 @@ __ANALYSIS_TODAY__
 <div style="position:relative;height:300px;margin-bottom:14px"><canvas id="champChart"></canvas></div>
 <div class="tablewrap"><table id="pt"><thead><tr><th data-k="team">Equipo</th><th data-k="R32">R32</th><th data-k="R16">Octavos</th><th data-k="QF">Cuartos</th><th data-k="SF">Semis</th><th data-k="FINAL">Final</th><th data-k="CAMPEON">Campeón</th></tr></thead><tbody></tbody></table></div></div></main>
 <main id="strat"><div class="card">
-<p><b>La clave: marcadores exactos.</b> Acertar el marcador exacto da 5 pts — más que ganar ganador+ambos goles. El modelo elige el marcador de <b>máxima probabilidad</b> según las cuotas reales del mercado — NO por lo que ponga tu grupo (esa señal es débil y nos sesgaba a marcadores improbables).</p>
+<p><b>La clave: marcadores exactos.</b> Acertar el marcador exacto da 5 pts — más que ganar ganador+ambos goles. El modelo parte del marcador <b>más probable</b> según las cuotas reales del mercado. Si tu grupo se amontona justo ahí, el sistema se desvía a un <b>gap creíble</b> — un marcador casi igual de probable que nadie del grupo tiene — para separarse. Nunca persigue marcadores improbables solo por ser únicos (la "regla del marcador creíble": solo se acepta si su probabilidad ≥ 85% de la del pico).</p>
 <p><b>Qué datos usa el modelo en cada pick:</b></p>
 <ul>
 <li><b>Cuotas 1X2 + O/U + Asian Handicap</b> (~23 casas) — 4 constraints determinan λ_local y λ_visitante casi únicamente. Sin O/U, infinitas combinaciones de goles satisfacen el mismo 1X2.</li>
@@ -461,9 +463,9 @@ __ANALYSIS_TODAY__
 <li><b>Calibración Bayesiana online</b> — aprende de cada gol del Mundial. ATT/DEF por equipo se ajustan con resultados reales.</li>
 <li><b>Elo en vivo</b> — K=40 en grupos, actualizado tras cada resultado.</li>
 </ul>
-<p><b>Bono unicidad (+2):</b> se cobra SOLO si aciertas el exacto Y eres el único del grupo. El sistema NO lo persigue (no sacrifica probabilidad por ser único); cae solo cuando aciertas un marcador probable poco común.</p>
+<p><b>Bono unicidad (+2):</b> se cobra SOLO si aciertas el exacto Y eres el único del grupo. El sistema lo busca, pero <b>solo dentro de la banda creíble</b>: si hay un marcador casi igual de probable que nadie del grupo tiene, lo prefiere; nunca sacrifica probabilidad real por ser único.</p>
 <p><b>Donde se gana de verdad:</b> los MARCADORES, sobre todo los exactos (5 pts, o 7 si eres único). Los bonos de avance son todo-o-nada y marginales (EV ~1 pt total). No los persigas con picks arriesgados.</p>
-<p><b>De dónde viene la ventaja:</b> el modelo usa cuotas reales del mercado (lo mejor que existe) mientras los rivales pican a ojo. Si acierta más exactos que ellos a lo largo del torneo, se separa solo — sin adivinar lo que pusieron.</p>
+<p><b>De dónde viene la ventaja:</b> vas último, así que copiar al grupo te deja último. La ventaja es doble: (1) el modelo usa cuotas reales del mercado — lo mejor que existe — mientras los rivales pican a ojo; (2) cuando el grupo se amontona en el marcador obvio, el sistema busca un gap creíble para sumar exactos que nadie más tiene. En un Mundial tan variable, separarse con marcadores casi-igual-de-probables es lo que rompe el empate a tu favor.</p>
 <p><b>Alineaciones de último minuto:</b> se captan vía las cuotas — cuando se confirma que un crack es suplente, las casas mueven la línea ~1h antes y el sistema baja cuotas frescas y reajusta el pick antes del cierre.</p>
 </div></main>
 <main id="rules"><div class="card"><table><tbody>

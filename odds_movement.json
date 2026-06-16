@@ -1,0 +1,100 @@
+[
+ {
+  "home": "Alemania",
+  "away": "Curazao",
+  "dH": 0.029,
+  "dA": -0.598,
+  "sharp": true
+ },
+ {
+  "home": "PaisesBajos",
+  "away": "Japon",
+  "dH": -0.049,
+  "dA": 0.013,
+  "sharp": false
+ },
+ {
+  "home": "CostaMarfil",
+  "away": "Ecuador",
+  "dH": 0.111,
+  "dA": -0.08,
+  "sharp": false
+ },
+ {
+  "home": "Suiza",
+  "away": "Bosnia",
+  "dH": 0.0,
+  "dA": -0.042,
+  "sharp": false
+ },
+ {
+  "home": "Canada",
+  "away": "Catar",
+  "dH": 0.016,
+  "dA": -0.073,
+  "sharp": false
+ },
+ {
+  "home": "EEUU",
+  "away": "Australia",
+  "dH": -0.016,
+  "dA": 0.052,
+  "sharp": false
+ },
+ {
+  "home": "Escocia",
+  "away": "Marruecos",
+  "dH": -0.171,
+  "dA": 0.113,
+  "sharp": true
+ },
+ {
+  "home": "Brasil",
+  "away": "Haiti",
+  "dH": -0.018,
+  "dA": 0.31,
+  "sharp": true
+ },
+ {
+  "home": "Espana",
+  "away": "ArabiaSaudi",
+  "dH": 0.0,
+  "dA": 0.041,
+  "sharp": false
+ },
+ {
+  "home": "Portugal",
+  "away": "Uzbekistan",
+  "dH": -0.004,
+  "dA": -0.065,
+  "sharp": false
+ },
+ {
+  "home": "Bosnia",
+  "away": "Catar",
+  "dH": 0.048,
+  "dA": -0.084,
+  "sharp": false
+ },
+ {
+  "home": "Escocia",
+  "away": "Brasil",
+  "dH": -0.042,
+  "dA": 0.01,
+  "sharp": false
+ },
+ {
+  "home": "Marruecos",
+  "away": "Haiti",
+  "dH": 0.023,
+  "dA": -0.079,
+  "sharp": false
+ },
+ {
+  "home": "Curazao",
+  "away": "CostaMarfil",
+  "dH": -0.105,
+  "dA": 0.004,
+  "sharp": false
+ }
+]

@@ -1,92 +1,64 @@
 [
  {
-  "home": "Catar",
-  "away": "Suiza",
-  "oh": 15.0,
-  "od": 7.0,
-  "oa": 1.21
- },
- {
-  "home": "Brasil",
-  "away": "Marruecos",
-  "oh": 1.69,
-  "od": 3.75,
-  "oa": 5.6
- },
- {
-  "home": "Haiti",
-  "away": "Escocia",
-  "oh": 6.0,
-  "od": 4.5,
-  "oa": 1.54
- },
- {
-  "home": "Australia",
-  "away": "Turkiye",
-  "oh": 5.29,
-  "od": 3.8,
-  "oa": 1.7
- },
- {
   "home": "Alemania",
   "away": "Curazao",
-  "oh": 1.04,
-  "od": 18.5,
-  "oa": 41.5
+  "oh": 1.01,
+  "od": 32.0,
+  "oa": 75.5
  },
  {
   "home": "PaisesBajos",
   "away": "Japon",
-  "oh": 2.0,
-  "od": 3.6,
-  "oa": 3.8
+  "oh": 2.1,
+  "od": 3.465,
+  "oa": 3.75
  },
  {
   "home": "CostaMarfil",
   "away": "Ecuador",
-  "oh": 3.63,
-  "od": 2.85,
-  "oa": 2.4
+  "oh": 3.25,
+  "od": 2.9,
+  "oa": 2.6
  },
  {
   "home": "Suecia",
   "away": "Tunez",
-  "oh": 1.89,
-  "od": 3.47,
-  "oa": 4.4
+  "oh": 1.9449999999999998,
+  "od": 3.45,
+  "oa": 4.34
  },
  {
   "home": "Espana",
   "away": "CaboVerde",
-  "oh": 1.08,
-  "od": 11.85,
-  "oa": 26.0
+  "oh": 1.0950000000000002,
+  "od": 11.565000000000001,
+  "oa": 25.0
  },
  {
   "home": "Belgica",
   "away": "Egipto",
-  "oh": 1.62,
-  "od": 4.0,
-  "oa": 5.7
+  "oh": 1.61,
+  "od": 3.98,
+  "oa": 5.74
  },
  {
   "home": "ArabiaSaudi",
   "away": "Uruguay",
-  "oh": 8.1,
-  "od": 4.5,
-  "oa": 1.43
+  "oh": 8.0,
+  "od": 4.449999999999999,
+  "oa": 1.44
  },
  {
   "home": "Iran",
   "away": "NuevaZelanda",
   "oh": 1.83,
   "od": 3.5,
-  "oa": 4.78
+  "oa": 4.77
  },
  {
   "home": "Francia",
   "away": "Senegal",
-  "oh": 1.48,
+  "oh": 1.47,
   "od": 4.46,
   "oa": 7.25
  },
@@ -94,169 +66,169 @@
   "home": "Iraq",
   "away": "Noruega",
   "oh": 15.0,
-  "od": 7.25,
+  "od": 7.125,
   "oa": 1.19
  },
  {
   "home": "Argentina",
   "away": "Argelia",
-  "oh": 1.4,
-  "od": 4.62,
+  "oh": 1.38,
+  "od": 4.6,
   "oa": 9.0
  },
  {
   "home": "Austria",
   "away": "Jordania",
   "oh": 1.33,
-  "od": 5.5,
+  "od": 5.43,
   "oa": 9.0
  },
  {
   "home": "Portugal",
   "away": "RDCongo",
-  "oh": 1.28,
-  "od": 5.75,
-  "oa": 11.0
+  "oh": 1.29,
+  "od": 5.7,
+  "oa": 10.75
  },
  {
   "home": "Inglaterra",
   "away": "Croacia",
-  "oh": 1.71,
+  "oh": 1.705,
   "od": 3.85,
-  "oa": 5.0
+  "oa": 5.085
  },
  {
   "home": "Ghana",
   "away": "Panama",
-  "oh": 2.16,
+  "oh": 2.165,
   "od": 3.4,
-  "oa": 3.47
+  "oa": 3.46
  },
  {
   "home": "Uzbekistan",
   "away": "Colombia",
-  "oh": 9.0,
+  "oh": 8.95,
   "od": 4.7,
   "oa": 1.38
  },
  {
   "home": "Chequia",
   "away": "Sudafrica",
-  "oh": 1.75,
-  "od": 3.8,
-  "oa": 4.6
+  "oh": 1.76,
+  "od": 3.75,
+  "oa": 4.615
  },
  {
   "home": "Suiza",
   "away": "Bosnia",
   "oh": 1.57,
-  "od": 4.03,
-  "oa": 5.8
+  "od": 4.1,
+  "oa": 6.05
  },
  {
   "home": "Canada",
   "away": "Catar",
-  "oh": 1.3,
-  "od": 5.33,
-  "oa": 10.6
+  "oh": 1.28,
+  "od": 5.615,
+  "oa": 11.4
  },
  {
   "home": "Mexico",
   "away": "CoreaSur",
-  "oh": 1.97,
+  "oh": 1.98,
   "od": 3.35,
   "oa": 4.15
  },
  {
   "home": "EEUU",
   "away": "Australia",
-  "oh": 1.57,
-  "od": 4.2,
-  "oa": 5.6899999999999995
+  "oh": 1.5950000000000002,
+  "od": 4.225,
+  "oa": 5.4
  },
  {
   "home": "Escocia",
   "away": "Marruecos",
-  "oh": 4.17,
-  "od": 3.3,
-  "oa": 1.97
+  "oh": 4.95,
+  "od": 3.6,
+  "oa": 1.76
  },
  {
   "home": "Brasil",
   "away": "Haiti",
-  "oh": 1.08,
-  "od": 12.25,
-  "oa": 30.0
+  "oh": 1.1,
+  "od": 10.25,
+  "oa": 22.0
  },
  {
   "home": "Turkiye",
   "away": "Paraguay",
-  "oh": 2.05,
-  "od": 3.23,
-  "oa": 3.965
+  "oh": 2.03,
+  "od": 3.35,
+  "oa": 3.935
  },
  {
   "home": "PaisesBajos",
   "away": "Suecia",
-  "oh": 1.62,
-  "od": 4.02,
-  "oa": 5.3
+  "oh": 1.63,
+  "od": 4.05,
+  "oa": 5.2
  },
  {
   "home": "Alemania",
   "away": "CostaMarfil",
-  "oh": 1.54,
-  "od": 4.3,
-  "oa": 5.65
+  "oh": 1.55,
+  "od": 4.4,
+  "oa": 5.75
  },
  {
   "home": "Ecuador",
   "away": "Curazao",
-  "oh": 1.2,
-  "od": 6.75,
-  "oa": 14.75
+  "oh": 1.19,
+  "od": 7.5,
+  "oa": 15.25
  },
  {
   "home": "Tunez",
   "away": "Japon",
-  "oh": 5.4,
-  "od": 3.6,
-  "oa": 1.7
+  "oh": 5.48,
+  "od": 3.65,
+  "oa": 1.6949999999999998
  },
  {
   "home": "Espana",
   "away": "ArabiaSaudi",
   "oh": 1.105,
   "od": 9.5,
-  "oa": 25.0
+  "oa": 24.0
  },
  {
   "home": "Belgica",
   "away": "Iran",
   "oh": 1.4,
   "od": 4.7,
-  "oa": 7.9350000000000005
+  "oa": 8.0
  },
  {
   "home": "Uruguay",
   "away": "CaboVerde",
   "oh": 1.43,
   "od": 4.5,
-  "oa": 7.6
+  "oa": 7.7
  },
  {
   "home": "NuevaZelanda",
   "away": "Egipto",
-  "oh": 4.824999999999999,
+  "oh": 4.9,
   "od": 3.7,
-  "oa": 1.73
+  "oa": 1.72
  },
  {
   "home": "Argentina",
   "away": "Austria",
-  "oh": 1.62,
-  "od": 3.8899999999999997,
-  "oa": 5.5649999999999995
+  "oh": 1.61,
+  "od": 3.85,
+  "oa": 5.7
  },
  {
   "home": "Francia",
@@ -268,36 +240,36 @@
  {
   "home": "Noruega",
   "away": "Senegal",
-  "oh": 2.12,
+  "oh": 2.1,
   "od": 3.45,
-  "oa": 3.365
+  "oa": 3.4
  },
  {
   "home": "Jordania",
   "away": "Argelia",
-  "oh": 6.555,
-  "od": 4.25,
-  "oa": 1.5
+  "oh": 6.75,
+  "od": 4.3,
+  "oa": 1.49
  },
  {
   "home": "Portugal",
   "away": "Uzbekistan",
-  "oh": 1.2349999999999999,
-  "od": 6.245,
-  "oa": 11.25
+  "oh": 1.24,
+  "od": 6.2,
+  "oa": 12.0
  },
  {
   "home": "Inglaterra",
   "away": "Ghana",
   "oh": 1.31,
-  "od": 5.23,
-  "oa": 9.5
+  "od": 5.25,
+  "oa": 9.25
  },
  {
   "home": "Panama",
   "away": "Croacia",
   "oh": 6.5,
-  "od": 3.9450000000000003,
+  "od": 3.85,
   "oa": 1.55
  },
  {
@@ -305,174 +277,174 @@
   "away": "RDCongo",
   "oh": 1.45,
   "od": 4.2,
-  "oa": 7.4
+  "oa": 7.5
  },
  {
   "home": "Bosnia",
   "away": "Catar",
-  "oh": 1.61,
-  "od": 3.75,
-  "oa": 5.6899999999999995
+  "oh": 1.5350000000000001,
+  "od": 3.975,
+  "oa": 6.1899999999999995
  },
  {
   "home": "Suiza",
   "away": "Canada",
   "oh": 2.1,
   "od": 3.325,
-  "oa": 3.5
+  "oa": 3.4850000000000003
  },
  {
   "home": "Escocia",
   "away": "Brasil",
-  "oh": 6.45,
-  "od": 4.5,
-  "oa": 1.44
+  "oh": 6.725,
+  "od": 4.75,
+  "oa": 1.4249999999999998
  },
  {
   "home": "Marruecos",
   "away": "Haiti",
-  "oh": 1.33,
-  "od": 5.0,
-  "oa": 9.219999999999999
+  "oh": 1.3,
+  "od": 5.32,
+  "oa": 9.98
  },
  {
   "home": "Chequia",
   "away": "Mexico",
-  "oh": 4.525,
-  "od": 3.45,
-  "oa": 1.79
+  "oh": 4.515000000000001,
+  "od": 3.475,
+  "oa": 1.8
  },
  {
   "home": "Sudafrica",
   "away": "CoreaSur",
-  "oh": 5.66,
-  "od": 3.8899999999999997,
-  "oa": 1.6
+  "oh": 5.5,
+  "od": 3.9,
+  "oa": 1.59
  },
  {
   "home": "Curazao",
   "away": "CostaMarfil",
-  "oh": 12.75,
-  "od": 6.1,
-  "oa": 1.21
+  "oh": 14.165,
+  "od": 6.66,
+  "oa": 1.205
  },
  {
   "home": "Ecuador",
   "away": "Alemania",
   "oh": 4.625,
-  "od": 3.6950000000000003,
-  "oa": 1.7349999999999999
+  "od": 3.7199999999999998,
+  "oa": 1.75
  },
  {
   "home": "Japon",
   "away": "Suecia",
-  "oh": 2.08,
-  "od": 3.335,
-  "oa": 3.5
+  "oh": 2.06,
+  "od": 3.35,
+  "oa": 3.55
  },
  {
   "home": "Tunez",
   "away": "PaisesBajos",
-  "oh": 6.34,
-  "od": 4.2,
-  "oa": 1.495
+  "oh": 6.4,
+  "od": 4.24,
+  "oa": 1.47
  },
  {
   "home": "Paraguay",
   "away": "Australia",
-  "oh": 2.125,
-  "od": 3.2,
-  "oa": 3.55
+  "oh": 2.1399999999999997,
+  "od": 3.225,
+  "oa": 3.4400000000000004
  },
  {
   "home": "Turkiye",
   "away": "EEUU",
-  "oh": 2.685,
-  "od": 3.43,
-  "oa": 2.45
+  "oh": 2.7,
+  "od": 3.5,
+  "oa": 2.43
  },
  {
   "home": "Noruega",
   "away": "Francia",
-  "oh": 4.25,
+  "oh": 4.2,
   "od": 3.55,
-  "oa": 1.8250000000000002
+  "oa": 1.82
  },
  {
   "home": "Senegal",
   "away": "Iraq",
   "oh": 1.4,
-  "od": 4.475,
-  "oa": 7.845
+  "od": 4.5,
+  "oa": 7.8
  },
  {
   "home": "CaboVerde",
   "away": "ArabiaSaudi",
-  "oh": 2.4,
+  "oh": 2.44,
   "od": 3.4,
-  "oa": 2.6100000000000003
+  "oa": 2.62
  },
  {
   "home": "Uruguay",
   "away": "Espana",
   "oh": 5.25,
-  "od": 3.885,
+  "od": 3.89,
   "oa": 1.62
  },
  {
   "home": "NuevaZelanda",
   "away": "Belgica",
-  "oh": 9.66,
+  "oh": 9.5,
   "od": 5.5,
   "oa": 1.28
  },
  {
   "home": "Egipto",
   "away": "Iran",
-  "oh": 2.225,
-  "od": 2.995,
-  "oa": 3.54
+  "oh": 2.22,
+  "od": 2.99,
+  "oa": 3.53
  },
  {
   "home": "Croacia",
   "away": "Ghana",
-  "oh": 1.625,
-  "od": 3.71,
-  "oa": 5.45
+  "oh": 1.62,
+  "od": 3.72,
+  "oa": 5.4
  },
  {
   "home": "Panama",
   "away": "Inglaterra",
-  "oh": 9.375,
-  "od": 5.725,
-  "oa": 1.27
+  "oh": 9.25,
+  "od": 5.75,
+  "oa": 1.26
  },
  {
   "home": "Colombia",
   "away": "Portugal",
-  "oh": 3.5,
-  "od": 3.2800000000000002,
+  "oh": 3.48,
+  "od": 3.27,
   "oa": 2.1
  },
  {
   "home": "RDCongo",
   "away": "Uzbekistan",
   "oh": 2.3,
-  "od": 3.215,
-  "oa": 3.0700000000000003
+  "od": 3.23,
+  "oa": 3.06
  },
  {
   "home": "Argelia",
   "away": "Austria",
-  "oh": 3.5700000000000003,
-  "od": 3.125,
+  "oh": 3.54,
+  "od": 3.12,
   "oa": 2.15
  },
  {
   "home": "Jordania",
   "away": "Argentina",
-  "oh": 13.690000000000001,
-  "od": 6.725,
-  "oa": 1.185
+  "oh": 13.38,
+  "od": 6.6,
+  "oa": 1.18
  }
 ]

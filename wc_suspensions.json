@@ -1,4 +1,44 @@
 {
+ "Catar": {
+  "n_susp": 0,
+  "players": [],
+  "yellows_acc": {
+   "Mahmoud Abunada": 1,
+   "Jassem Gaber": 1
+  }
+ },
+ "Türkiye": {
+  "n_susp": 0,
+  "players": [],
+  "yellows_acc": {
+   "Yunus Akgün": 1
+  }
+ },
+ "Escocia": {
+  "n_susp": 0,
+  "players": [],
+  "yellows_acc": {
+   "Aaron Hickey": 1,
+   "Kenny McLean": 1,
+   "Findlay Curtis": 1
+  }
+ },
+ "EEUU": {
+  "n_susp": 0,
+  "players": [],
+  "yellows_acc": {
+   "Tyler Adams": 1
+  }
+ },
+ "Bosnia": {
+  "n_susp": 0,
+  "players": [],
+  "yellows_acc": {
+   "Nikola Katic": 1,
+   "Jovo Lukic": 1,
+   "Ermedin Demirovic": 1
+  }
+ },
  "Sudafrica": {
   "n_susp": 2,
   "players": [
@@ -10,14 +50,6 @@
    "Teboho Mokoena": 1
   }
  },
- "Canada": {
-  "n_susp": 0,
-  "players": [],
-  "yellows_acc": {
-   "Luc de Fougerolles": 1,
-   "Alistair Johnston": 1
-  }
- },
  "Mexico": {
   "n_susp": 1,
   "players": [
@@ -27,13 +59,25 @@
    "Brian Gutiérrez": 1
   }
  },
- "Bosnia": {
+ "CoreaSur": {
   "n_susp": 0,
   "players": [],
   "yellows_acc": {
-   "Nikola Katic": 1,
-   "Jovo Lukic": 1,
-   "Ermedin Demirovic": 1
+   "Lee Gi-Hyuk": 1
+  }
+ },
+ "Suiza": {
+  "n_susp": 0,
+  "players": [],
+  "yellows_acc": {
+   "Denis Zakaria": 1
+  }
+ },
+ "Haiti": {
+  "n_susp": 0,
+  "players": [],
+  "yellows_acc": {
+   "Jean-Ricner Bellegarde": 1
   }
  },
  "Paraguay": {
@@ -47,18 +91,20 @@
    "Alex Arce": 1
   }
  },
- "CoreaSur": {
+ "Brasil": {
   "n_susp": 0,
   "players": [],
   "yellows_acc": {
-   "Lee Gi-Hyuk": 1
+   "Roger Ibañez": 1,
+   "Casemiro": 1
   }
  },
- "EEUU": {
+ "Canada": {
   "n_susp": 0,
   "players": [],
   "yellows_acc": {
-   "Tyler Adams": 1
+   "Luc de Fougerolles": 1,
+   "Alistair Johnston": 1
   }
  }
 }

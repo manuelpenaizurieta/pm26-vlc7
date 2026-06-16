@@ -18,5 +18,25 @@
   "espn_id": "760417",
   "home": "United States",
   "away": "Paraguay"
+ },
+ "Qatar|Switzerland": {
+  "espn_id": "760420",
+  "home": "Qatar",
+  "away": "Switzerland"
+ },
+ "Brazil|Morocco": {
+  "espn_id": "760419",
+  "home": "Brazil",
+  "away": "Morocco"
+ },
+ "Haiti|Scotland": {
+  "espn_id": "760418",
+  "home": "Haiti",
+  "away": "Scotland"
+ },
+ "Australia|Türkiye": {
+  "espn_id": "760421",
+  "home": "Australia",
+  "away": "Türkiye"
  }
 }
