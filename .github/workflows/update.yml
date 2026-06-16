@@ -6,8 +6,11 @@ name: Actualizar polla mundial
 # actualiza solo. El schedule cada hora solo sirve para RE-ARRANCAR el bucle si se
 # cayo; el trabajo de cada 15 min lo garantiza el bucle interno, no el reloj de GitHub.
 on:
+  workflow_run:
+    workflows: ["Actualizar polla mundial"]
+    types: [completed]      # AUTO-ENCADENAMIENTO: al terminar un run OK, dispara el siguiente
   schedule:
-    - cron: '7 * * * *'    # cada hora: re-arranca el bucle si hizo falta
+    - cron: '7 * * * *'    # redundancia (el schedule de GitHub falla a menudo)
   push:
     branches: [main]
     paths-ignore:
@@ -16,12 +19,16 @@ on:
 
 concurrency:
   group: polla-update
-  cancel-in-progress: true  # un arranque nuevo reemplaza al bucle viejo (nunca dos a la vez)
+  cancel-in-progress: false  # NO cancelar: deja terminar el bucle vivo (encadenado/manual)
 
 jobs:
   update:
+    # Cadena continua: si el run anterior completo bien, arranca el siguiente, sin depender
+    # del reloj de GitHub. Si fallo o fue cancelado, NO encadena (evita bucles de reintentos)
+    # -> lo retoma el schedule o un disparo manual.
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 350     # ~5,8h: el bucle cubre los huecos cuando GitHub no dispara
+    timeout-minutes: 355     # ~5,9h por run; al acabar, el auto-encadenamiento lanza el siguiente
     permissions:
       contents: write
     steps:
@@ -40,7 +47,7 @@ jobs:
         run: |
           git config user.email "github-actions@github.com"
           git config user.name "github-actions[bot]"
-          END=$((SECONDS + 19500))   # ~5,4h de bucle
+          END=$((SECONDS + 20400))   # ~5,7h de bucle (deja margen bajo el timeout de 355 min)
           while true; do
             echo "=== vuelta $(date -u +%H:%M:%S) UTC ==="
             git fetch origin main && git reset --hard origin/main
