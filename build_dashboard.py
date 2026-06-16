@@ -453,7 +453,7 @@ __ANALYSIS_TODAY__
 <li>⚡ Ajusta por <b>presión de grupo</b>: 0pts en jornada 3 = +15% goles; ya clasificado = −10%</li>
 <li>🔬 <b>Calibración Bayesiana online</b>: aprende de cada gol del Mundial</li>
 <li>🎲 Simula <b>30.000 Mundiales</b> (Monte Carlo, bracket oficial FIFA, Elo en vivo)</li>
-<li>📈 Elige el marcador más probable; si tu grupo se amontona ahí, se desvía a un <b>gap creíble</b> (igual de probable, que nadie tiene) para separarse</li>
+<li>📈 Elige el marcador de <b>mayor puntos esperados</b> = probabilidad de acierto + bono si nadie de tu grupo lo tiene; suele ser el más probable, y se mueve a un hueco libre solo si ahí gana más</li>
 <li>⚡ Resultados en <b>TIEMPO REAL</b> (ESPN, al pitido final) → actualiza tu clasificación</li>
 <li>🤖 <b>Apuesta por ti</b> con anticipación y revisa cada ~15 min hasta el cierre (saque −30 min)</li>
 </ul>
@@ -476,7 +476,7 @@ __ANALYSIS_TODAY__
 <div style="position:relative;height:300px;margin-bottom:14px"><canvas id="champChart"></canvas></div>
 <div class="tablewrap"><table id="pt"><thead><tr><th data-k="team">Equipo</th><th data-k="R32">R32</th><th data-k="R16">Octavos</th><th data-k="QF">Cuartos</th><th data-k="SF">Semis</th><th data-k="FINAL">Final</th><th data-k="CAMPEON">Campeón</th></tr></thead><tbody></tbody></table></div></div></main>
 <main id="strat"><div class="card">
-<p><b>La clave: marcadores exactos.</b> Acertar el marcador exacto da 5 pts — más que ganar ganador+ambos goles. El modelo parte del marcador <b>más probable</b> según las cuotas reales del mercado. Si tu grupo se amontona justo ahí, el sistema se desvía a un <b>gap creíble</b> — un marcador casi igual de probable que nadie del grupo tiene — para separarse. Nunca persigue marcadores improbables solo por ser únicos (la "regla del marcador creíble": solo se acepta si su probabilidad ≥ 85% de la del pico).</p>
+<p><b>La clave: marcadores exactos.</b> Acertar el marcador exacto da 5 pts — más que ganar ganador+ambos goles. El sistema elige el marcador de <b>mayor puntos esperados (E[pts])</b>, calculado de forma exacta: E[pts] = valor del modelo (exacto 5 + ganador 2 + goles por equipo, ponderado por la probabilidad de cada resultado posible) + <b>bono de unicidad</b> (+2 × probabilidad de acierto) si ningún rival de tu grupo tiene ese marcador. En la mayoría de partidos eso coincide con el marcador más probable; solo se desvía a un hueco libre cuando ese hueco da MÁS puntos esperados (su probabilidad casi igual + el bono por ser único). No hay reglas inventadas ni umbrales: es el maximizador exacto de puntos, así que nunca persigue marcadores improbables (su baja probabilidad hunde su E[pts]).</p>
 <p><b>Qué datos usa el modelo en cada pick:</b></p>
 <ul>
 <li><b>Cuotas 1X2 + O/U + Asian Handicap</b> (~23 casas) — 4 constraints determinan λ_local y λ_visitante casi únicamente. Sin O/U, infinitas combinaciones de goles satisfacen el mismo 1X2.</li>
@@ -486,9 +486,10 @@ __ANALYSIS_TODAY__
 <li><b>Calibración Bayesiana online</b> — aprende de cada gol del Mundial. ATT/DEF por equipo se ajustan con resultados reales.</li>
 <li><b>Elo en vivo</b> — K=40 en grupos, actualizado tras cada resultado.</li>
 </ul>
-<p><b>Bono unicidad (+2):</b> se cobra SOLO si aciertas el exacto Y eres el único del grupo. El sistema lo busca, pero <b>solo dentro de la banda creíble</b>: si hay un marcador casi igual de probable que nadie del grupo tiene, lo prefiere; nunca sacrifica probabilidad real por ser único.</p>
+<p><b>Bono unicidad (+2):</b> se cobra SOLO si aciertas el exacto Y eres el único del grupo. Entra directo en el cálculo de E[pts]: un marcador libre (que nadie tiene) suma +2×P(acierto), y el sistema lo elige cuando eso lo hace ganar al marcador más probable (ej. si el favorito obvio lo tienen 4 rivales y hay un marcador casi igual de probable libre). Si el hueco libre es poco probable, su bono pequeño no compensa y se queda en el más probable.</p>
+<p><b>Sin bandazos de último minuto (histéresis):</b> una vez colocado un pick, el sistema no lo cambia por ruido de cuotas — solo si el nuevo marcador supera al puesto por un margen real de puntos esperados. Así no ves el marcador oscilando entre dos casi-empatados (ej. 2-0 ↔ 1-0); sí reacciona a cambios de verdad, como una alineación confirmada.</p>
 <p><b>Donde se gana de verdad:</b> los MARCADORES, sobre todo los exactos (5 pts, o 7 si eres único). Los bonos de avance son todo-o-nada y marginales (EV ~1 pt total). No los persigas con picks arriesgados.</p>
-<p><b>De dónde viene la ventaja:</b> vas último, así que copiar al grupo te deja último. La ventaja es doble: (1) el modelo usa cuotas reales del mercado — lo mejor que existe — mientras los rivales pican a ojo; (2) cuando el grupo se amontona en el marcador obvio, el sistema busca un gap creíble para sumar exactos que nadie más tiene. En un Mundial tan variable, separarse con marcadores casi-igual-de-probables es lo que rompe el empate a tu favor.</p>
+<p><b>De dónde viene la ventaja:</b> vas último, así que copiar al grupo te deja último. La ventaja es doble: (1) el modelo usa cuotas reales del mercado — lo mejor que existe — mientras los rivales pican a ojo; (2) cuando un marcador casi igual de probable está libre, el sistema lo prefiere (vía el bono de unicidad en el E[pts]) para sumar exactos que nadie más tiene. En un Mundial tan variable, clavar exactos y separarte cuando sale a cuenta es lo que rompe el empate a tu favor.</p>
 <p><b>Alineaciones de último minuto:</b> se captan vía las cuotas — cuando se confirma que un crack es suplente, las casas mueven la línea ~1h antes y el sistema baja cuotas frescas y reajusta el pick antes del cierre.</p>
 </div></main>
 <main id="rules"><div class="card"><table><tbody>
@@ -665,7 +666,7 @@ function renderHoy(){
    +'<span class="tm">'+esc(m.home)+' – '+esc(m.away)+'</span>'
    +'<span class="t">'+(closed?'<b style="color:#dc2626">CERRADO</b>':'🔒 cierra '+closeLbl)+' · saque '+m.time+'</span></div>'
    +'<div style="margin:4px 0"><span class="pick" style="font-size:24px">'+m.bx+' - '+m.by+'</span>'
-   +' <span class="alt gnote">P(exacto) '+m.pex+'% · es el marcador más probable según las cuotas reales</span></div>'
+   +' <span class="alt gnote">P(exacto) '+m.pex+'% · marcador de mayor puntos esperados (probabilidad + bono si nadie del grupo lo tiene)</span></div>'
    +'<div class="t">gana '+esc(m.home)+' '+m.ph+'% / empate '+m.pd+'% / gana '+esc(m.away)+' '+m.pa+'%</div>';
   list.appendChild(div); });
  function rec(){
@@ -676,8 +677,8 @@ function renderHoy(){
   var mi=me.pts, li=lead.pts;
   box.innerHTML="Vas <b>"+me.pos+"º</b> de "+STANDINGS.length+" · <b>"+mi+" pts</b> · líder ("+esc(lead.name)+") "+li+" pts";
   var d=li-mi;
-  if(d<=0){ out.innerHTML="<b style='color:var(--ok)'>Vas LÍDER (+"+(-d)+").</b> El sistema apuesta solo el marcador más probable en cada partido. No tienes que tocar nada."; }
-  else { out.innerHTML="<b>A "+d+" pts del líder.</b> El sistema apuesta el marcador más probable según las cuotas reales del mercado. La vía para remontar es acertar más <b>exactos</b> que los rivales (que pican a ojo) — no adivinar lo que pusieron. No tienes que tocar nada."; }
+  if(d<=0){ out.innerHTML="<b style='color:var(--ok)'>Vas LÍDER (+"+(-d)+").</b> El sistema apuesta el marcador de mayor puntos esperados en cada partido. No tienes que tocar nada."; }
+  else { out.innerHTML="<b>A "+d+" pts del líder.</b> El sistema apuesta el marcador de <b>mayor puntos esperados</b>: la probabilidad real (cuotas del mercado) más un bono cuando un marcador casi igual de probable está libre en tu grupo. La vía para remontar es acertar más <b>exactos</b> que los rivales (que pican a ojo). No tienes que tocar nada."; }
  }
  rec();
 }
