@@ -257,45 +257,31 @@ except FileNotFoundError:
     pass
 
 def group_optimal(a, taken):
-    """PICK = sintesis grupo + analisis, con una regla LIMPIA para separarse:
+    """PICK = maximiza el VALOR ESPERADO REAL de puntos dado el grupo, SIN heuristicas
+    artificiales (sin penalizaciones de separacion ni umbrales de 'marcador creible',
+    que sesgaban el pick — ej. Francia 3-1 cuando el 2-0 daba mas puntos).
 
-    Se PARTE del marcador de mayor EV (el optimo segun las cuotas reales). Solo se
-    DESVIA a otro marcador si ese marcador esta LIBRE (0 rivales del grupo lo tienen)
-    y aporta mas valor que quedarse en el pico. NUNCA se desvia a un marcador que otro
-    rival YA tiene: eso bajaria la probabilidad de acertar SIN ganar unicidad (el error
-    de jugar 1-0 cuando el optimo es 2-0 y el 1-0 tampoco es unico -> pierdes en ambas).
+    Para CADA marcador: E[pts] = EV del modelo (exacto 5 + ganador 2 + goles 1/equipo,
+    ya ponderado por la matriz de probabilidad) + bono de unicidad (2*P(exacto)) SOLO si
+    el marcador esta LIBRE (ningun rival del grupo lo tiene). Se elige el de mayor E[pts].
 
-      - Bono de unicidad (+2) en un marcador libre solo si es CREIBLE (P >= 0.85*pico),
-        para no perseguir marcadores de cola improbables solo por ser unicos.
-      - El pico se penaliza por cada rival amontonado en el (premia separarse a un hueco
-        libre): FUERTE (0.15) si existe un marcador libre y creible al que romper
-        (partido parejo), SUAVE (0.03) si no (goleada -> clavar el mas probable manda)."""
+    Es el maximizador EXACTO de puntos esperados, y se comporta como queremos sin reglas
+    ad-hoc: clava el marcador mas probable cuando ningun hueco libre lo supera (un
+    marcador de cola libre tiene P baja -> EV bajo y bono pequeño -> no gana, ej. Francia
+    2-0); se desvia a un hueco libre SOLO cuando su E[pts] real supera al pico (ej. Iraq
+    0-1 libre supera al 0-2 saturado de 4 rivales; Ghana 1-1; Argentina 1-0)."""
     g6 = a["g6"]; p6 = a.get("p6", [[0]*9 for _ in range(9)])
     n = len(g6)
     def cnt_of(px, py):
         return taken.get(f"{px}-{py}", 0) if isinstance(taken, dict) else (1 if f"{px}-{py}" in taken else 0)
-    pmax = max((p6[px][py] for px in range(n) for py in range(n)), default=0.0)
-    thr  = 0.85 * pmax                       # umbral de "marcador creible" (cerca del pico)
-    has_credible_unique = any(p6[px][py] >= thr and cnt_of(px, py) == 0
-                              for px in range(n) for py in range(n))
-    sep_pen = 0.15 if has_credible_unique else 0.03
-    # 1) punto de partida: marcador de mayor EV (el "pico"), penalizado si esta saturado
-    peak = None
+    best = None
     for px in range(M.MAXG+1):
         for py in range(M.MAXG+1):
-            ev = g6[px][py] if px < n and py < n else 0
-            if peak is None or ev > peak[0]: peak = (ev, px, py)
-    _, peak_x, peak_y = peak
-    best = (peak[0] - cnt_of(peak_x, peak_y) * sep_pen, peak_x, peak_y)
-    # 2) solo se considera DESVIARSE a marcadores LIBRES (0 rivales)
-    for px in range(M.MAXG+1):
-        for py in range(M.MAXG+1):
-            if (px, py) == (peak_x, peak_y) or cnt_of(px, py) != 0: continue
             ev = g6[px][py] if px < n and py < n else 0
             pe = p6[px][py] if px < n and py < n else 0
-            uniq_bonus = pe * 2 if pe >= thr else 0
+            uniq_bonus = pe * 2 if cnt_of(px, py) == 0 else 0   # +2 si aciertas exacto Y eres unico
             tot = ev + uniq_bonus
-            if tot > best[0]: best = (tot, px, py)
+            if best is None or tot > best[0]: best = (tot, px, py)
     return best[1], best[2]
 
 matches = []
