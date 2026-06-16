@@ -41,7 +41,7 @@ jobs:
         run: |
           git config user.email "github-actions@github.com"
           git config user.name "github-actions[bot]"
-          END=$((SECONDS + 120))   # PRUEBA TEMPORAL: 2 min para verificar el auto-encadenamiento
+          END=$((SECONDS + 20400))   # ~5,7h de bucle; al acabar, se auto-lanza el siguiente run con el PAT
           while true; do
             echo "=== vuelta $(date -u +%H:%M:%S) UTC ==="
             git fetch origin main && git reset --hard origin/main
