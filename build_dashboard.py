@@ -114,19 +114,25 @@ def analyze(home, away):
     if _SC:
         ph_mult, pa_mult = _SC.get_lambda_mults(home, away)
 
-    # penalizacion por tarjetas/lesiones
-    card_pen_h = _WCC.get_lambda_pen(home) if _WCC else 1.0
-    card_pen_a = _WCC.get_lambda_pen(away) if _WCC else 1.0
-
-    la0, lb0 = M.lambdas(home, away, C)
-    la0_adj   = la0 * ph_mult * card_pen_h
-    lb0_adj   = lb0 * pa_mult * card_pen_a
-
-    # cuotas de mercado (si las hay): anclan el favorito. Se determinan YA, para el guard.
+    # cuotas de mercado: se determinan YA porque, si las hay, ANCLAN tanto el favorito como
+    # el PESO del jugador ausente: la linea se mueve en proporcion a QUIEN falta (mucho si
+    # es Messi/Mbappe/Lamine o un arquero clave; poco si es un suplente). Ese es el peso
+    # real del jugador, automatico e imparcial — mejor que cualquier % plano.
     flip  = False
     oo    = MODDS.get((home, away))
     if oo is None and (away, home) in MODDS:
         oo = MODDS[(away, home)]; flip = True
+
+    # tarjetas/lesiones: castigo plano (-6%/jugador) SOLO como respaldo SIN mercado. CON
+    # mercado NO se aplica: la linea ya pesa al jugador ausente (un % plano no distingue a
+    # Messi de un suplente -> doble-contaria y ademas mal-ponderado). El peso del jugador
+    # es muy variable; la fuente correcta de ese peso es el mercado, no un porcentaje fijo.
+    card_pen_h = _WCC.get_lambda_pen(home) if (_WCC and not oo) else 1.0
+    card_pen_a = _WCC.get_lambda_pen(away) if (_WCC and not oo) else 1.0
+
+    la0, lb0 = M.lambdas(home, away, C)
+    la0_adj   = la0 * ph_mult * card_pen_h
+    lb0_adj   = lb0 * pa_mult * card_pen_a
 
     # GUARD anti-inversion de favorito (caso Mexico-CoreaSur, 19 jun): SIN cuotas de
     # mercado que lo anclen, las heuristicas blandas no-mercado (clasificado/rotacion,
@@ -463,7 +469,7 @@ __ANALYSIS_TODAY__
 <li>📊 Descarga cuotas <b>1X2 + O/U + Asian Handicap</b> (~23 casas) y detecta movimiento sharp</li>
 <li>🎯 Ajusta las lambdas Dixon-Coles a esas cuotas (4 constraints) → la mejor estimación de goles del partido</li>
 <li>💥 En goleadas (grande vs equipo muy débil) <b>infla los goles del favorito</b>: el mercado los subestima</li>
-<li>🟥 Baja <b>tarjetas y suspensiones</b> (ESPN) → −6% lambda por jugador suspendido</li>
+<li>🟥 <b>Suspensiones y lesiones</b>: el peso del jugador ausente lo da el movimiento de cuotas (mucho si es una estrella o arquero clave, poco si es suplente); solo sin línea de mercado usa un −6% plano de respaldo</li>
 <li>⚡ Ajusta por <b>presión de grupo</b>: 0pts en jornada 3 = +15% goles; ya clasificado = −10%</li>
 <li>🔬 <b>Calibración Bayesiana online</b>: aprende de cada gol del Mundial</li>
 <li>🎲 Simula <b>30.000 Mundiales</b> (Monte Carlo, bracket oficial FIFA, Elo en vivo)</li>
@@ -494,7 +500,7 @@ __ANALYSIS_TODAY__
 <p><b>Qué datos usa el modelo en cada pick:</b></p>
 <ul>
 <li><b>Cuotas 1X2 + O/U + Asian Handicap</b> (~23 casas) — 4 constraints determinan λ_local y λ_visitante casi únicamente. Sin O/U, infinitas combinaciones de goles satisfacen el mismo 1X2.</li>
-<li><b>Tarjetas y suspensiones</b> (ESPN, automático) — cada jugador suspendido aplica −6% lambda (cap −15%). Señal 🟥 en el calendario. <i>Estos ajustes blandos no pueden invertir el favorito si no hay cuotas de mercado que lo anclen.</i></li>
+<li><b>Tarjetas, suspensiones y lesiones</b> — el impacto depende de QUIÉN falta, y ese peso lo pone el <b>mercado</b>: cuando se confirma la baja de una estrella (o un arquero clave) la línea se mueve mucho y el modelo se calibra a ella; si es un suplente, casi no se mueve. Solo cuando NO hay cuotas para ese partido se usa un −6%/jugador plano de respaldo (cap −15%), que además no puede invertir el favorito. Señal 🟥 en el calendario.</li>
 <li><b>Presión de grupo</b> — 0pts en jornada 3 = +15% goles (todo o nada). Ya clasificado = −10% (posible rotación). Señal ⚡ en el calendario.</li>
 <li><b>Movimiento de línea sharp</b> — cuotas que se mueven >12% entre ciclos = dinero informado. El modelo ajusta +6% al lado que se acorta.</li>
 <li><b>Calibración Bayesiana online</b> — aprende de cada gol del Mundial. ATT/DEF por equipo se ajustan con resultados reales.</li>
