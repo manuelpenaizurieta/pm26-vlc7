@@ -721,7 +721,7 @@ function renderStandings(){
  var tb=document.querySelector("#standtbl tbody"); if(!tb)return; tb.innerHTML="";
  STANDINGS.forEach(function(r){
   var tr=document.createElement("tr");
-  if(r.me)tr.style.background="#dbeafe";
+  if(r.me){tr.style.background="#dbeafe";tr.style.color="#13245c";tr.style.fontWeight="600";}  // fija color OSCURO: en modo oscuro el texto era casi blanco sobre azul claro -> fila "en blanco"
   tr.innerHTML="<td>"+r.pos+"</td><td>"+(r.me?"<b>":"")+esc(r.name)+(r.sc>1?" ("+r.sc+")":"")+(r.me?" ⬅</b>":"")
    +"</td><td>"+r.ceS+"</td><td>"+r.ccW+"</td><td>"+r.ccG+"</td><td>"+(r.cuP||0)+"</td><td><b>"+r.pts+"</b></td>";
   tb.appendChild(tr);
@@ -1062,9 +1062,9 @@ def setup_items():
            "Detección de línea sharp activa" + age_str(p_mov),
            "Movimiento sharp: pendiente (requiere 2 snapshots de odds)"),
         li(has_susp,
-           (f"Tarjetas/suspensiones ESPN activas — {n_susp} suspendido(s): {', '.join(susp_teams)}" if n_susp
-            else "Tarjetas/suspensiones ESPN activas — sin suspendidos ahora") + age_str(p_susp),
-           "Tarjetas/suspensiones: se activan en la próxima ejecución"),
+           (f"Tarjetas ESPN activas — {n_susp} con 2+ amarillas o roja ACUMULADA en el torneo: {', '.join(susp_teams)} (cuenta acumulada; no se vacía al cumplir la sanción — solo informativo)" if n_susp
+            else "Tarjetas ESPN activas — sin acumuladas relevantes ahora") + age_str(p_susp),
+           "Tarjetas/sanciones: se activan en la próxima ejecución"),
         li(_SC is not None,
            "Presión de grupo activa (standings context — mult por jornada/pts)",
            "Standings context: módulo no encontrado"),
