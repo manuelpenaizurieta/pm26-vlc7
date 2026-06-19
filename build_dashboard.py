@@ -122,16 +122,30 @@ def analyze(home, away):
     la0_adj   = la0 * ph_mult * card_pen_h
     lb0_adj   = lb0 * pa_mult * card_pen_a
 
+    # cuotas de mercado (si las hay): anclan el favorito. Se determinan YA, para el guard.
+    flip  = False
+    oo    = MODDS.get((home, away))
+    if oo is None and (away, home) in MODDS:
+        oo = MODDS[(away, home)]; flip = True
+
+    # GUARD anti-inversion de favorito (caso Mexico-CoreaSur, 19 jun): SIN cuotas de
+    # mercado que lo anclen, las heuristicas blandas no-mercado (clasificado/rotacion,
+    # suspensiones) NO deben INVERTIR el favorito base de ratings; a lo sumo reducen su
+    # margen. Mexico era favorito base (lam 2.14>1.94) pero -10% clasificado y -10% por
+    # Montes (DEFENSA, castigo mal-firmado) lo invirtieron a CoreaSur -> picamos 1-2 y
+    # gano Mexico 1-0. Si el ajuste cruza el favorito y no hay mercado, se conserva el
+    # orden base con margen reducido (25% del margen base), preservando el total de goles.
+    if not oo and (la0 - lb0) * (la0_adj - lb0_adj) < 0:
+        total = la0_adj + lb0_adj
+        new_diff = 0.25 * (la0 - lb0)
+        la0_adj, lb0_adj = (total + new_diff) / 2, (total - new_diff) / 2
+
     mat = M.build_matrix(home, away, C)
     if ph_mult != 1.0 or pa_mult != 1.0 or card_pen_h != 1.0 or card_pen_a != 1.0:
         mat = mat_from_lams(la0_adj, lb0_adj)
 
     ou_dt = None; ah_dt = None; mov = None
     mkt   = False
-    flip  = False
-    oo    = MODDS.get((home, away))
-    if oo is None and (away, home) in MODDS:
-        oo = MODDS[(away, home)]; flip = True
     if oo:
         rh, rd, ra = 1/oo[0], 1/oo[1], 1/oo[2]
         s = rh+rd+ra; tH, tA = rh/s, ra/s
@@ -449,7 +463,7 @@ __ANALYSIS_TODAY__
 <li>📊 Descarga cuotas <b>1X2 + O/U + Asian Handicap</b> (~23 casas) y detecta movimiento sharp</li>
 <li>🎯 Ajusta las lambdas Dixon-Coles a esas cuotas (4 constraints) → la mejor estimación de goles del partido</li>
 <li>💥 En goleadas (grande vs equipo muy débil) <b>infla los goles del favorito</b>: el mercado los subestima</li>
-<li>🟥 Baja <b>tarjetas y suspensiones</b> (ESPN) → −10% lambda por jugador suspendido</li>
+<li>🟥 Baja <b>tarjetas y suspensiones</b> (ESPN) → −6% lambda por jugador suspendido</li>
 <li>⚡ Ajusta por <b>presión de grupo</b>: 0pts en jornada 3 = +15% goles; ya clasificado = −10%</li>
 <li>🔬 <b>Calibración Bayesiana online</b>: aprende de cada gol del Mundial</li>
 <li>🎲 Simula <b>30.000 Mundiales</b> (Monte Carlo, bracket oficial FIFA, Elo en vivo)</li>
@@ -480,7 +494,7 @@ __ANALYSIS_TODAY__
 <p><b>Qué datos usa el modelo en cada pick:</b></p>
 <ul>
 <li><b>Cuotas 1X2 + O/U + Asian Handicap</b> (~23 casas) — 4 constraints determinan λ_local y λ_visitante casi únicamente. Sin O/U, infinitas combinaciones de goles satisfacen el mismo 1X2.</li>
-<li><b>Tarjetas y suspensiones</b> (ESPN, automático) — cada jugador suspendido aplica −10% lambda (cap −25%). Señal 🟥 en el calendario.</li>
+<li><b>Tarjetas y suspensiones</b> (ESPN, automático) — cada jugador suspendido aplica −6% lambda (cap −15%). Señal 🟥 en el calendario. <i>Estos ajustes blandos no pueden invertir el favorito si no hay cuotas de mercado que lo anclen.</i></li>
 <li><b>Presión de grupo</b> — 0pts en jornada 3 = +15% goles (todo o nada). Ya clasificado = −10% (posible rotación). Señal ⚡ en el calendario.</li>
 <li><b>Movimiento de línea sharp</b> — cuotas que se mueven >12% entre ciclos = dinero informado. El modelo ajusta +6% al lado que se acorta.</li>
 <li><b>Calibración Bayesiana online</b> — aprende de cada gol del Mundial. ATT/DEF por equipo se ajustan con resultados reales.</li>

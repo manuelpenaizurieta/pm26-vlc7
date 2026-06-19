@@ -52,8 +52,11 @@ ESPN_TEAM_MAP = {
     "South Korea": "CoreaSur", "Korea Republic": "CoreaSur",
 }
 
-LAMBDA_PEN = 0.10   # -10% lambda por cada jugador suspendido/lesionado
-LAMBDA_CAP = 0.25   # maximo -25% (3+ jugadores)
+LAMBDA_PEN = 0.06   # -6% lambda por jugador suspendido/lesionado (era 0.10: demasiado
+                    # para 1 jugador, y mal-firmado si es DEFENSA -ej. Montes en Mexico-
+                    # CoreaSur: su baja deberia SUBIR los goles del rival, no bajar los
+                    # propios-. Sin datos de posicion, se reduce la magnitud).
+LAMBDA_CAP = 0.15   # maximo -15% (varios jugadores)
 
 def _get(url, retries=3):
     import urllib.request
