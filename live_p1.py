@@ -159,6 +159,10 @@ def run(n_sim=N_SIM):
             continue
         if (h, a) not in completed_dict and (a, h) not in completed_dict:
             remaining.append((h, a))
+    # partidos de RONDAS FUTURAS (octavos+) aun sin equipos definidos: se cuentan para NO
+    # subestimar la remontada (la polla tiene 32 partidos de eliminatoria, no solo 16avos).
+    # En la simulacion se modelan como "replays" de los partidos conocidos.
+    n_future = sum(1 for m in (cal or []) if m.get("tbd"))
 
     me_entry    = next((r for r in standings if r.get("me")), None)
     rivals_list = [r for r in standings if not r.get("me")]
@@ -233,6 +237,25 @@ def run(n_sim=N_SIM):
                 if cnt[pool[k]] == 1 and pool[k] == (ax, ay):
                     rival_uniq[k] += 2
 
+        # RONDAS FUTURAS (octavos, cuartos, semis, final): equipos aun desconocidos. Se
+        # modelan como partidos representativos (replay aleatorio de los 16avos) para
+        # reflejar la oportunidad real de remontar en lo que queda del torneo.
+        for _ in range(n_future):
+            h, a = remaining[int(RNG.integers(len(remaining)))]
+            pool = pools.get((h, a))
+            ax, ay = sample_mat(pool[int(RNG.integers(len(pool)))]) if pool else (1, 0)
+            my_pk = picks_me.get((h, a), (1, 0))
+            my_match += S.pts(my_pk[0], my_pk[1], ax, ay)
+            r_pks = [sample_pick(rival_dists[(h, a)]) for _ in range(n_rivals)]
+            for k in range(n_rivals):
+                rival_match[k] += S.pts(r_pks[k][0], r_pks[k][1], ax, ay)
+            allp = r_pks + [my_pk]; cnt2 = Counter(allp)
+            if cnt2[my_pk] == 1 and my_pk == (ax, ay):
+                my_uniq += 2
+            for k in range(n_rivals):
+                if cnt2[r_pks[k]] == 1 and r_pks[k] == (ax, ay):
+                    rival_uniq[k] += 2
+
         # totales finales (solo marcadores + unicidad)
         my_total     = my_base + my_match + my_uniq
         rival_totals = rival_bases + rival_match + rival_uniq
@@ -249,7 +272,7 @@ def run(n_sim=N_SIM):
         "ci_low":      round(max(0.0,   (p1 - ci) * 100), 1),
         "ci_high":     round(min(100.0, (p1 + ci) * 100), 1),
         "brier":       bs,
-        "n_remaining": len(remaining),
+        "n_remaining": len(remaining) + n_future,
         "n_played":    len(results_list or []),
         "my_base":     my_base,
         "my_rank":     me_entry.get("pos", "?"),
