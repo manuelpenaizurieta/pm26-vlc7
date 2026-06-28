@@ -538,7 +538,9 @@ tabs.forEach(function(b){ b.addEventListener("click",function(){
  document.querySelectorAll("main").forEach(function(m){m.classList.remove("on")});
  document.getElementById(b.dataset.t).classList.add("on"); }); });
 var gf=document.getElementById("gf");
-"ABCDEFGHIJKL".split("").forEach(function(g){var o=document.createElement("option");o.value=g;o.textContent="Grupo "+g;gf.appendChild(o);});
+(function(){var seen={};DATA.forEach(function(m){seen[m.g]=1;});
+["A","B","C","D","E","F","G","H","I","J","K","L","16avos","Octavos","Cuartos","Semis","3er puesto","Final"].forEach(function(g){
+ if(!seen[g])return;var o=document.createElement("option");o.value=g;o.textContent=(g.length===1?"Grupo "+g:g);gf.appendChild(o);});})();
 gf.addEventListener("change",render);
 var onlyClose=document.getElementById("onlyClose");
 onlyClose.addEventListener("change",render);
@@ -621,7 +623,7 @@ function render(){
  });
  document.getElementById("score").textContent=gtot+" pts";
  document.getElementById("scoren").textContent="("+gres+" partidos jugados; sin contar bonos de unicidad ni de avance — esos los ves en la pestaña Clasificación)";
- document.getElementById("stJug").textContent=done+"/72";
+ document.getElementById("stJug").textContent=done+"/"+DATA.length;
 }
 var sortK="R32",sortAsc=false;
 function pct(v){return (Math.round(v*10)/10).toFixed(1)+"%";}
