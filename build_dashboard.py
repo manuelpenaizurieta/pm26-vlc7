@@ -329,6 +329,13 @@ def epts_of(a, px, py, taken):
 
 matches = []
 for m in CAL:
+    if m.get("tbd") or m["home"] not in M.R0 or m["away"] not in M.R0:
+        # cruce de eliminatoria sin equipos definidos: solo estructura (sin pick ni analisis)
+        ph = {k: m.get(k) for k in ("g", "home", "away", "date", "time", "dow", "dlabel", "venue")}
+        ph.update({"tbd": True, "bx": None, "by": None, "ax": None, "ay": None,
+                   "rx": None, "ry": None, "auto": False, "grp": None})
+        matches.append(ph)
+        continue
     a = analyze(m["home"], m["away"])
     rr = RES.get((m["home"], m["away"]))
     if rr is None:
@@ -546,7 +553,7 @@ var onlyClose=document.getElementById("onlyClose");
 onlyClose.addEventListener("change",render);
 var statef=document.getElementById("statef");
 statef.addEventListener("change",render);
-function isClose(m){return Math.abs(m.ph-m.pa)<8;}
+function isClose(m){return !m.tbd && Math.abs(m.ph-m.pa)<8;}
 function isPlayed(m){ return (m.rx!=null&&m.ry!=null) || !!store[m.date+"|"+m.home+"|"+m.away]; }
 function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");}
 function render(){
@@ -565,6 +572,13 @@ function render(){
   cont.appendChild(h);
   var card=document.createElement("div"); card.className="card";
   byDay[d].forEach(function(m){
+   if(m.tbd){
+    var prow=document.createElement("div"); prow.className="mx";
+    prow.innerHTML='<div class="t">'+m.time+'<br>['+esc(m.g)+']</div>'
+     +'<div><span class="tm" style="opacity:.55">'+esc(m.g)+' — por definir</span> '
+     +'<span class="alt">(se completa al conocerse los equipos)</span></div><div class="right"></div>';
+    card.appendChild(prow); return;
+   }
    var key=m.date+"|"+m.home+"|"+m.away;
    var row=document.createElement("div"); row.className="mx";
    var api=(m.rx!=null&&m.ry!=null)?m.rx+"-"+m.ry:"";
@@ -618,6 +632,7 @@ function render(){
  // total y contador SIEMPRE sobre TODOS los partidos jugados (no solo el filtro)
  var gtot=0,gres=0,done=0;
  DATA.forEach(function(m){
+  if(m.tbd)return;
   var v=store[m.date+"|"+m.home+"|"+m.away]||((m.rx!=null&&m.ry!=null)?m.rx+"-"+m.ry:"");
   if(v){ var r=v.split("-"); gtot+=pts(m.bx,m.by,+r[0],+r[1]); gres++; done++; }
  });
@@ -1111,7 +1126,7 @@ html = (HTML.replace("__GEN__", _now_cest.strftime("%d %b %Y %H:%M") + " (Valenc
             .replace("__NEWS__", news_html(NEWS, matches)))
 # picks finales (para la auto-apuesta): "Home|Away" -> [bx, by]
 with open(os.path.join(HERE, "picks.json"), "w", encoding="utf-8") as f:
-    json.dump({f"{m['home']}|{m['away']}": [m["bx"], m["by"]] for m in matches}, f, ensure_ascii=False, indent=1)
+    json.dump({f"{m['home']}|{m['away']}": [m["bx"], m["by"]] for m in matches if not m.get("tbd")}, f, ensure_ascii=False, indent=1)
 
 out = os.path.join(HERE, "polla_v4.html")
 with open(out, "w", encoding="utf-8") as f:
