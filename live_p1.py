@@ -155,6 +155,8 @@ def run(n_sim=N_SIM):
     remaining = []
     for m in (cal or []):
         h, a = m["home"], m["away"]
+        if m.get("tbd") or h not in M.R0 or a not in M.R0:   # saltar cruces "Por definir" (placeholder)
+            continue
         if (h, a) not in completed_dict and (a, h) not in completed_dict:
             remaining.append((h, a))
 
