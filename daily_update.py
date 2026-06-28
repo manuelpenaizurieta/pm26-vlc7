@@ -57,6 +57,7 @@ if __name__ == "__main__":
     run("wc_pool_strategy.py")
     # picks reales de tu grupo desde pollamundial.org (privado, local)
     if run("polla_fetch.py"):
+        run("build_ko_calendar.py")   # agrega al calendario los cruces de eliminatoria YA definidos
         run("polla_sync.py")
     run("live_p1.py")         # P(1o) en vivo: standings + simulacion restantes -> live_stats.json
     run("build_dashboard.py") # carga live_stats.json recien generado
