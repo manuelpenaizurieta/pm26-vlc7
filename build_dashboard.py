@@ -934,7 +934,9 @@ def analysis_today_html(matches_data):
     today = _dt.date.today()
     tomorrow = today + _dt.timedelta(days=1)
     window = {today.isoformat(), tomorrow.isoformat()}
-    relevant = [m for m in matches_data if m.get("date", "") in window]
+    # solo partidos de hoy/mañana AÚN NO JUGADOS y con equipos definidos (no placeholders)
+    relevant = [m for m in matches_data if m.get("date", "") in window
+                and m.get("rx") is None and not m.get("tbd")]
     if not relevant:
         return ""
 
