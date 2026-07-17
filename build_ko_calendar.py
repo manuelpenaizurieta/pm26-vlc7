@@ -26,7 +26,7 @@ def build():
     real = ph = 0
     for mid, m in sorted(pm.items(), key=lambda kv: kv[1].get("ts", 0)):
         st = m.get("st")
-        if st == "G" or st not in STAGE or m.get("pf"):
+        if st == "G" or st not in STAGE:      # solo eliminatoria (jugados y por jugar)
             continue
         ha, hb = CODE.get(m.get("tA")), CODE.get(m.get("tB"))
         ts = m.get("ts")
