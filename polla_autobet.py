@@ -34,6 +34,10 @@ def run(hours=HOURS_AHEAD):
     matches = json.load(open(os.path.join(HERE, "polla_matches.json"), encoding="utf-8"))
     cal = json.load(open(os.path.join(HERE, "calendar_final.json"), encoding="utf-8"))
     picks = json.load(open(os.path.join(HERE, "picks.json"), encoding="utf-8"))
+    try:
+        override = json.load(open(os.path.join(HERE, "picks_override.json"), encoding="utf-8"))
+    except (FileNotFoundError, ValueError):
+        override = {}
     cal_idx = {frozenset((c["home"], c["away"])): c for c in cal}
     now = time.time() * 1000
     ts_str = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M")
@@ -55,14 +59,20 @@ def run(hours=HOURS_AHEAD):
             skipped += 1; continue
         flip = (c["home"] != ha)               # orientar a teamA(local)=tA de la web
         gA, gB = (pk[1], pk[0]) if flip else (pk[0], pk[1])
+        # ganador/avance: por defecto sale del marcador; si el override fija el equipo que
+        # avanza (3er elemento, p.ej. eliminatoria con empate) se usa ese -> registra
+        # campeon/quien pasa (vale para el bono). Se orienta a teamA/teamB de la web.
+        w = "teamA" if gA > gB else ("teamB" if gA < gB else "E")
+        ov = override.get(f"{c['home']}|{c['away']}")
+        if ov and len(ov) >= 3 and ov[2] in ("teamA", "teamB"):
+            w = ({"teamA": "teamB", "teamB": "teamA"}[ov[2]]) if flip else ov[2]
         path = f"bets/{cm}/{GID}/{uid}/{SUB}/prediction"
         cur = get(path, tok)
-        if isinstance(cur, dict) and cur.get("gA") == gA and cur.get("gB") == gB:
+        if isinstance(cur, dict) and cur.get("gA") == gA and cur.get("gB") == gB and cur.get("w") == w:
             left += 1
             _log({"t": ts_str, "cm": cm, "match": f"{c['home']}|{c['away']}",
                   "pick": f"{gA}-{gB}", "accion": "ok"})
             continue
-        w = "teamA" if gA > gB else ("teamB" if gA < gB else "E")
         obj = {"gA": gA, "gB": gB, "w": w, "ts": int(now),
                "fs": f"{gA}-{gB}-{w}", "sc": SC}
         put(path, tok, obj)

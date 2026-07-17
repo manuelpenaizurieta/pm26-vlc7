@@ -1,4 +1,4 @@
 {
- "Espana|Argentina": [0, 0],
- "Francia|Inglaterra": [0, 0]
+ "Espana|Argentina": [1, 1, "teamB"],
+ "Francia|Inglaterra": [1, 2]
 }
