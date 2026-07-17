@@ -458,7 +458,7 @@ select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:
 <div class="stats">
 <div class="stat"><b>__D_FINAL__</b><span>días para la final</span></div>
 <div class="stat"><b id="stJug">0/72</b><span>resultados metidos</span></div>
-<div class="stat"><b>__P1__%</b><span>P(ganar) en vivo <span style="font-size:10px;opacity:.7">__P1_CI__pp · pos.__RANK__</span></span></div>
+<div class="stat"><b>__P3__%</b><span>prob. de <b>podio</b> (top 3 = premio) <span style="font-size:10px;opacity:.7">ganar 1º __P1__% · pos.__RANK__</span></span></div>
 <div class="stat"><b>Brier __BRIER__</b><span>calibración modelo (↓ mejor)</span></div>
 <div class="stat"><b><span id="nextrunStat">—</span></b><span>próxima actualización</span></div>
 </div></div>
@@ -1102,6 +1102,7 @@ except FileNotFoundError:
     pass
 
 p1_live = LIVE.get("p1", "?")
+p3_live = LIVE.get("p3", "?")
 p1_ci   = f"±{round((LIVE.get('ci_high', 0) - LIVE.get('ci_low', 0)) / 2, 1)}" if LIVE else ""
 p1_rank = LIVE.get("my_rank", "?")
 brier   = LIVE.get("brier")
@@ -1114,6 +1115,7 @@ _now_cest = datetime.datetime.utcnow() + datetime.timedelta(hours=2)
 html = (HTML.replace("__GEN__", _now_cest.strftime("%d %b %Y %H:%M") + " (Valencia)")
             .replace("__D_FINAL__", str(dias_final))
             .replace("__P1__", str(p1_live))
+            .replace("__P3__", str(p3_live))
             .replace("__P1_CI__", p1_ci)
             .replace("__RANK__", str(p1_rank))
             .replace("__BRIER__", brier_str)

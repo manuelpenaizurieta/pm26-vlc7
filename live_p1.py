@@ -193,6 +193,7 @@ def run(n_sim=N_SIM):
     rival_bases  = np.array([r["pts"] for r in rivals_list], dtype=float)
 
     wins = 0
+    top3 = 0
     for _ in range(n_sim):
         # simular resultados: verdad muestreada de una matriz PERTURBADA aleatoria del pool
         sim_res = {}
@@ -260,15 +261,20 @@ def run(n_sim=N_SIM):
         my_total     = my_base + my_match + my_uniq
         rival_totals = rival_bases + rival_match + rival_uniq
 
-        if my_total > rival_totals.max():
+        rank = 1 + int((rival_totals > my_total).sum())   # 1 = lider
+        if rank == 1:
             wins += 1
+        if rank <= 3:                                       # podio (premio 70/20/10)
+            top3 += 1
 
     p1  = wins / n_sim
+    p3  = top3 / n_sim
     ci  = 1.96 * math.sqrt(p1 * (1 - p1) / n_sim)
     bs  = brier_score(results_list or [], C_val)
 
     return {
         "p1":          round(p1 * 100, 1),
+        "p3":          round(p3 * 100, 1),
         "ci_low":      round(max(0.0,   (p1 - ci) * 100), 1),
         "ci_high":     round(min(100.0, (p1 + ci) * 100), 1),
         "brier":       bs,
@@ -288,6 +294,7 @@ if __name__ == "__main__":
         elapsed = time.time() - t0
         bs_str = f"{stats['brier']:.4f}" if stats.get("brier") is not None else "—"
         print(f"P(1o) en vivo:  {stats['p1']}%  [{stats['ci_low']}%–{stats['ci_high']}%]")
+        print(f"P(podio/top3):  {stats['p3']}%  (premio 70/20/10 al top 3)")
         print(f"Brier score:    {bs_str}  (baseline ~0.222 para 3 resultados equi-probables)")
         print(f"Partidos:       {stats['n_played']} jugados · {stats['n_remaining']} restantes")
         print(f"Tu posicion:    {stats['my_rank']}o · {stats['my_base']} pts actuales · {elapsed:.1f}s")
